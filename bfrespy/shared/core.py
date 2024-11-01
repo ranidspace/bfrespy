@@ -94,6 +94,15 @@ class ResFileLoader(BinaryReader):
                 list_.append(self.__read_res_data(T))
                 count -= 1
 
+    def check_signature(self, valid_signature):
+        """Reads a BFRES signature consisting of 4 ASCII characters encoded as
+        a UInt32 and checks for validity.
+        """
+        signature = self.read_raw_string(4, 'ascii')
+        if (signature != valid_signature):
+            print(f"Invalid signature, expected '{valid_signature}' but got\
+                   '{signature}' at position {self.tell()}.")
+
     def load_string(self, encoding = None):
         offset = self.read_offset()
 
