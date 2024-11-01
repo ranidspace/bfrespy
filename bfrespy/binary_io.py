@@ -4,9 +4,11 @@ import struct
 
 class BinaryReader(io.BufferedReader):
     """A wrapper to read binary data as other formats"""
-    def __init__(self, raw: io.BytesIO):
-        super().__init__(raw)
+    def __init__(self, raw):
         self.endianness = '<'
+        if (type(raw) == bytes):
+            raw = io.BytesIO(raw)
+        return super().__init__(raw)
 
     def align(self, alignment):
         self.seek(-self.tell() % alignment, io.SEEK_CUR)
@@ -41,7 +43,7 @@ class BinaryReader(io.BufferedReader):
         return struct.unpack(self.endianness + str(int(count)) + 'I', self.read(4 * count))
     
     def read_uint64(self) -> int:  # Switch has 64 bit offsets
-        return struct.unpack(self.endianness + 'Q', self.read(8))
+        return struct.unpack(self.endianness + 'Q', self.read(8))[0]
 
     def read_uint64s(self, count) -> int:  # Switch has 64 bit offsets
         return struct.unpack(self.endianness + str(int(count)) + 'Q', self.read(8 * count))

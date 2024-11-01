@@ -1,13 +1,14 @@
 import io
 from bfrespy.shared.core import ResFileLoader, IResData
-from ...shared.res_file import ResFile
+from ..shared.res_file import ResFile
 
 class ResFileSwitchLoader(ResFileLoader):
     def __init__(self, res_file: ResFile, 
-                 raw: io.BytesIO, res_data: IResData = None):
+                 raw: io.BytesIO, 
+                 res_data: IResData = None):
         super().__init__(res_file, raw, res_data)
         self.endianness = '<'
-        self.IsSwitch = True
+        self.is_switch = True
 
     # TODO load_custom if needed https://github.com/KillzXGaming/BfresLibrary/blob/6f387692bbbddefce278716313cd714a2cdaa95d/BfresLibrary/Switch/Core/ResFileLoader.cs#L80
 
@@ -34,7 +35,7 @@ class ResFileSwitchLoader(ResFileLoader):
         # TODO Implement String Cache
         if (offset < 0 or offset > len(self.raw.getbuffer())):
             return ""
-        with self.TemporarySeek(reader, offset, io.SEEK_SET) as reader:
+        with self.TemporarySeek(self, offset, io.SEEK_SET) as reader:
             return self.read_string(encoding)
         
     def load_strings(self, count, encoding = None):
