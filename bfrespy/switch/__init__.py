@@ -1,5 +1,8 @@
-from ..shared import ResFile
+import io
+from ..shared import ResFile, ExternalFile
 from .core import ResFileSwitchLoader
+from ..switch.memory_pool import MemoryPool, BufferInfo
+from ..shared.common import ResString, StringTable
 
 class ResFileParser:
     def load(loader: ResFileSwitchLoader, res_file: ResFile):
@@ -11,7 +14,7 @@ class ResFileParser:
         res_file.alignment = loader.read_byte()
         res_file.target_addr_size = loader.read_byte();  #Thanks MasterF0X for pointing out the layout of the these
         offset_to_filename = loader.read_uint32()
-        res_file.flag = loader.read_uint16()
+        res_file.flags = loader.read_uint16()
         res_file.block_offs = loader.read_uint16()
         relocation_table_offset = loader.read_uint32()
         siz_file = loader.read_uint32()
@@ -20,51 +23,62 @@ class ResFileParser:
         model_dict_offs = loader.read_offset()
         if (loader.res_file.version_major2 >= 9):
             loader.read_bytes(32);  #reserved
-        # TODO Finish the rest of the header, the rest of this is the source
-        # code from the original c# library 
-        '''res_file.SkeletalAnims = loader.LoadDictValues<SkeletalAnim>()
-        res_file.MaterialAnims = loader.LoadDictValues<MaterialAnim>()
-        res_file.BoneVisibilityAnims = loader.LoadDictValues<VisibilityAnim>()
-        res_file.ShapeAnims = loader.LoadDictValues<ShapeAnim>()
-        res_file.SceneAnims = loader.LoadDictValues<SceneAnim>()
-        res_file.MemoryPool = loader.Load<MemoryPool>()
-        res_file.BufferInfo = loader.Load<BufferInfo>()
+        # TODO Read These properly
+        res_file.skeletal_anims = loader.read_offset()
+        res_file.skeletal_anims = loader.read_offset()
+        res_file.material_anims = loader.read_offset()
+        res_file.material_anims = loader.read_offset()
+        res_file.bone_visibility_anims = loader.read_offset()
+        res_file.bone_visibility_anims = loader.read_offset()
+        res_file.shape_anims = loader.read_offset()
+        res_file.shape_anims = loader.read_offset()
+        res_file.scene_anims = loader.read_offset()
+        res_file.scene_anims = loader.read_offset()
+        res_file.mem_pool = loader.load(MemoryPool)
+        res_file.buffer_info = loader.load(BufferInfo)
 
-        if (loader.ResFile.VersionMajor2 >= 10)
+        if (loader.res_file.version_major2 >= 10):
              #Peek at external flags
-            byte PeekFlags()
-                with (loader.TemporarySeek(0xee, SeekOrigin.Begin)):
+            def peek_flags():
+                with (loader.TemporarySeek(loader, 0xee, io.SEEK_SET)):
                     return loader.read_byte()
 
-            var flag = (ResFile.ExternalFlags)PeekFlags()
-            if (flag.HasFlag(ResFile.ExternalFlags.HoldsExternalStrings))
-                long externalFileOffset = loader.read_offset()
-                var externalFileDict = loader.LoadDict<ResString>()
+            flags = peek_flags()
+            if (res_file.has_flag(flags, 
+                                  res_file.ext_flags.holds_external_strings)):
+                externalFileOffset = loader.read_offset()
+                externalFileDict = loader.load_dict(ResString)
 
-                using (loader.TemporarySeek(externalFileOffset, SeekOrigin.Begin))
+                '''with (loader.TemporarySeek(externalFileOffset, io.SEEK_SET)):
                     StringCache.Strings.Clear()
                     foreach (var str in externalFileDict.Keys)
                         long stringID = loader.ReadInt64()
-                        StringCache.Strings.Add(stringID, str)
+                        StringCache.Strings.Add(stringID, str)'''
                 return
              #GPU section for TOTK
-            if (flag.HasFlag(ResFile.ExternalFlags.HasExternalGPU))
-                using (loader.TemporarySeek(sizFile, SeekOrigin.Begin))
-                    uint gpuDataOffset = loader.read_uint32()
-                    uint gpuBufferSize = loader.read_uint32()
+            if (res_file.has_flag(flags,
+                                  res_file.ext_flags.has_external_gpu)):
+                with (loader.TemporarySeek(loader,
+                                           res_file.siz_file,
+                                           io.SEEK_SET)):
+                    gpuDataOffset = loader.read_uint32()
+                    gpuBufferSize = loader.read_uint32()
 
-                    res_file.BufferInfo = new BufferInfo()
-                    BufferInfo.BufferOffset = sizFile + 288
+                    res_file.buffer_info = BufferInfo()
+                    res_file.buffer_info.bufffer_offs = siz_file + 288
 
-        res_file.ExternalFiles = loader.LoadDictValues<ExternalFile>()
-        long padding1 = loader.ReadInt64()
-        res_file.StringTable = loader.Load<StringTable>()
-        uint StringPoolSize = loader.read_uint32()
-        ushort numModel = loader.read_uint16()
 
-         #Read models after buffer data
-        res_file.Models = loader.LoadDictValues<Model>(modelDictOffset, modelOffset)
+        res_file.external_files = loader.load_dict_values(ExternalFile)
+        padding1 = loader.read_uint64()
+        res_file.string_table = loader.load(StringTable)
+        res_file.string_pool_size = loader.read_uint32()
+        res_file.num_model = loader.read_uint16()
 
+        # Read models after buffer data
+        res_file.models = loader.load_dict_values(Model, 
+                                                  model_dict_offs, 
+                                                  model_offs)
+        '''
         if (loader.ResFile.VersionMajor2 >= 9)
              #Count for 2 new sections
             ushort unkCount = loader.read_uint16()

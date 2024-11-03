@@ -2,77 +2,117 @@
 import io
 import struct
 
-class BinaryReader(io.BufferedReader):
+class BinaryReader:
     """A wrapper to read binary data as other formats"""
-    def __init__(self, raw):
-        self.endianness = '<'
-        if (type(raw) == bytes):
-            raw = io.BytesIO(raw)
-        return super().__init__(raw)
+    def __init__(self, stream: io.BufferedReader, leave_open = False):
+        self.endianness: bool
+        self.leave_open = leave_open
+        self.stream = stream
+
+        if (type(stream) == bytes):
+            stream = io.BytesIO(stream)
+            return super().__init__(stream)
+        
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if (self.leave_open == False):
+            self.stream.close()
+        else:
+            print("nothing happened")
+            return 
 
     def align(self, alignment):
         self.seek(-self.tell() % alignment, io.SEEK_CUR)
+    
+    def seek(self, offset, whence=io.SEEK_CUR):
+        return self.stream.seek(offset, whence)
+    
+    def tell(self):
+        return self.stream.tell()
 
     def read_null_string(self, encoding = None) -> str:
-        encoding = encoding if encoding != None else 'shift-jis'    # Mostly the same as ascii i dont think there's harm in setting this?
+        encoding = encoding if encoding != None else 'utf-8'    # Mostly the same as ascii i dont think there's harm in setting this?
         text = ''
-        i = self.read(1)
+        i = self.stream.read(1)
         while i[0] != 0:
             text += i.decode(encoding) 
-            i = self.read(1)
+            i = self.stream.read(1)
         return text
 
     # Unsigned
 
     def read_byte(self) -> int:
-        return self.read(1)[0]
+        return self.stream.read(1)[0]
     
     def read_bytes(self, count) -> bytes:
-        return self.read(count)
+        return self.stream.read(count)
     
     def read_uint16(self) -> int:
-        return struct.unpack(self.endianness + 'H', self.read(2))[0]
+        return struct.unpack(self.endianness 
+                             + 'H', self.stream.read(2))[0]
 
     def read_uint16s(self, count) -> list[int]:
-        return struct.unpack(self.endianness + str(int(count)) + 'H', self.read(2 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'H', self.stream.read(2 * count))
 
     def read_uint32(self) -> int:
-        return struct.unpack(self.endianness + 'I', self.read(4))[0]
+        return struct.unpack(self.endianness + 'I', self.stream.read(4))[0]
 
     def read_uint32s(self, count) -> list[int]:
-        return struct.unpack(self.endianness + str(int(count)) + 'I', self.read(4 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'I', self.stream.read(4 * count))
     
     def read_uint64(self) -> int:  # Switch has 64 bit offsets
-        return struct.unpack(self.endianness + 'Q', self.read(8))[0]
+        return struct.unpack(self.endianness 
+                             + 'Q', self.stream.read(8))[0]
 
     def read_uint64s(self, count) -> int:  # Switch has 64 bit offsets
-        return struct.unpack(self.endianness + str(int(count)) + 'Q', self.read(8 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'Q', self.stream.read(8 * count))
     
     # Signed
     
     def read_int32(self) -> int:
-        return struct.unpack(self.endianness + 'i', self.read(4))[0]
+        return struct.unpack(self.endianness 
+                             + 'i', self.stream.read(4))[0]
 
     def read_int32s(self, count) -> list[int]:
-        return struct.unpack(self.endianness + str(int(count)) + 'i', self.read(4 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'i', self.stream.read(4 * count))
+    
+    def read_int64(self) -> int:  # Switch has 64 bit offsets
+        return struct.unpack(self.endianness 
+                             + 'q', self.stream.read(8))[0]
 
     def read_sbyte(self):
-        return struct.unpack(self.endianness + 'b', self.read(1))[0]
+        return struct.unpack(self.endianness 
+                             + 'b', self.stream.read(1))[0]
 
     def read_sbytes(self, count):
-        return struct.unpack(self.endianness + str(int(count)) + 'b', self.read(1 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'b', self.stream.read(1 * count))
     
     # Other Formats
 
     def read_single(self) -> int:
-        return struct.unpack(self.endianness + 'f', self.read(4))[0]
+        return struct.unpack(self.endianness 
+                             + 'f', self.stream.read(4))[0]
 
     def read_singles(self, count) -> list[int]:
-        return struct.unpack(self.endianness + str(int(count)) + 'f', self.read(4 * count))
+        return struct.unpack(self.endianness 
+                             + str(int(count)) 
+                             + 'f', self.stream.read(4 * count))
 
     def read_raw_string(self, length, encoding = None):
-        encoding = encoding if encoding != None else 'shift-jis'
-        return self.read(length).decode(encoding)
+        encoding = encoding if encoding != None else 'utf-8'
+        return self.stream.read(length).decode(encoding)
     
     class TemporarySeek:
         """Temporarily move the pointer to a different location and return it 

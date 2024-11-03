@@ -67,7 +67,7 @@ class ResDict(IResData):
 
     def clear(self):
         """Removes all elements from the dictionary"""
-        self._nodes.clear
+        self._nodes.clear()
         self._nodes.append(self.Node())
 
     def contains_key(self, key):
@@ -184,7 +184,7 @@ class ResDict(IResData):
     # Methods
 
     def load(self, loader: ResFileLoader):
-        loader.read_uint32  # Always 0 on switch, total size on Wii U
+        loader.read_uint32()  # Always 0 on switch, total size on Wii U
         num_nodes = loader.read_uint32()  # Excluding Root node
 
         i = 0
@@ -194,6 +194,7 @@ class ResDict(IResData):
             nodes.append(self.__read_node(loader))
             i += 1  # XXX What does i do here?
             num_nodes -= 1
+        self._nodes = nodes
 
     # Protected Methods
 

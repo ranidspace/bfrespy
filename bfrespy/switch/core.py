@@ -3,10 +3,13 @@ from bfrespy.shared.core import ResFileLoader, IResData
 from ..shared.res_file import ResFile
 
 class ResFileSwitchLoader(ResFileLoader):
-    def __init__(self, res_file: ResFile, 
-                 raw: io.BytesIO, 
-                 res_data: IResData = None):
-        super().__init__(res_file, raw, res_data)
+    def __init__(self, 
+                 res_file: ResFile, 
+                 stream: io.BufferedReader,
+                 leave_open = False, 
+                 res_data: IResData = None
+                 ):
+        super().__init__(res_file, stream, leave_open, res_data)
         self.endianness = '<'
         self.is_switch = True
 
@@ -33,10 +36,13 @@ class ResFileSwitchLoader(ResFileLoader):
         if (offset == 0):
             return None
         # TODO Implement String Cache
-        if (offset < 0 or offset > len(self.raw.getbuffer())):
+        if (offset < 0):
             return ""
         with self.TemporarySeek(self, offset, io.SEEK_SET) as reader:
-            return self.read_string(encoding)
+            try: 
+                return self.read_string(encoding)
+            except IndexError:
+                return ""
         
     def load_strings(self, count, encoding = None):
         offsets = self.read_uint64s(count)
