@@ -3,6 +3,7 @@ from ..shared.models.material import TexSampler
 
 
 class GX2AAMode(IntEnum):
+    """Represents the AA modes (number of samples) for a surface."""
     Mode1X = 0
     Mode2X = 1
     Mode4X = 2
@@ -11,91 +12,89 @@ class GX2AAMode(IntEnum):
 
 class GX2AttribFormat(IntEnum):
     """Represents the format of a vertex attribute entry"""
-    # 8 bits (8 x 1)
     Format_8_UNorm = 0x00000000
+    """8 bits (8 x 1)"""
     Format_8_UInt = 0x00000100
     Format_8_SNorm = 0x00000200
     Format_8_SInt = 0x00000300
     Format_8_UIntToSingle = 0x00000800
     Format_8_SIntToSingle = 0x00000A00
-    # 8 bits (4 x 2)
     Format_4_4_UNorm = 0x00000001
-    # 16 bits (16 x 1)
+    """8 bits (4 x 2)"""
     Format_16_UNorm = 0x00000002
+    """16 bits (16 x 1)"""
     Format_16_UInt = 0x00000102
     Format_16_SNorm = 0x00000202
     Format_16_SInt = 0x00000302
     Format_16_Single = 0x00000803
     Format_16_UIntToSingle = 0x00000802
     Format_16_SIntToSingle = 0x00000A02
-    # 16 bits (8 x 2)
     Format_8_8_UNorm = 0x00000004
+    """16 bits (8 x 2)"""
     Format_8_8_UInt = 0x00000104
     Format_8_8_SNorm = 0x00000204
     Format_8_8_SInt = 0x00000304
     Format_8_8_UIntToSingle = 0x00000804
     Format_8_8_SIntToSingle = 0x00000A04
-    # 32 bits (32 x 1)
     Format_32_UInt = 0x00000105
+    """32 bits (32 x 1)"""
     Format_32_SInt = 0x00000305
     Format_32_Single = 0x00000806
-    # 32 bits (16 x 2)
     Format_16_16_UNorm = 0x00000007
+    """32 bits (16 x 2)"""
     Format_16_16_UInt = 0x00000107
     Format_16_16_SNorm = 0x00000207
     Format_16_16_SInt = 0x00000307
     Format_16_16_Single = 0x00000808
     Format_16_16_UIntToSingle = 0x00000807
     Format_16_16_SIntToSingle = 0x00000A07
-    # 32 bits (10/11 x 3)
     Format_10_11_11_Single = 0x00000809
-    # 32 bits (8 x 4)
+    """32 bits (10/11 x 3)"""
     Format_8_8_8_8_UNorm = 0x0000000A
+    """32 bits (8 x 4)"""
     Format_8_8_8_8_UInt = 0x0000010A
     Format_8_8_8_8_SNorm = 0x0000020A
     Format_8_8_8_8_SInt = 0x0000030A
     Format_8_8_8_8_UIntToSingle = 0x0000080A
     Format_8_8_8_8_SIntToSingle = 0x00000A0A
-    # 32 bits (10 x 3 + 2)
     Format_10_10_10_2_UNorm = 0x0000000B
+    """32 bits (10 x 3 + 2)"""
     Format_10_10_10_2_UInt = 0x0000010B
     Format_10_10_10_2_SNorm = 0x0000020B  # High 2 bits are UNorm
     Format_10_10_10_2_SInt = 0x0000030B
-    # 64 bits (32 x 2)
     Format_32_32_UInt = 0x0000010C
+    """64 bits (32 x 2)"""
     Format_32_32_SInt = 0x0000030C
     Format_32_32_Single = 0x0000080D
-    # 64 bits (16 x 4)
     Format_16_16_16_16_UNorm = 0x0000000E
+    """64 bits (16 x 4)"""
     Format_16_16_16_16_UInt = 0x0000010E
     Format_16_16_16_16_SNorm = 0x0000020E
     Format_16_16_16_16_SInt = 0x0000030E
     Format_16_16_16_16_Single = 0x0000080F
     Format_16_16_16_16_UIntToSingle = 0x0000080E
     Format_16_16_16_16_SIntToSingle = 0x00000A0E
-    # 96 bits (32 x 3)
     Format_32_32_32_UInt = 0x00000110
+    """96 bits (32 x 3)"""
     Format_32_32_32_SInt = 0x00000310
     Format_32_32_32_Single = 0x00000811
-    # 128 bits (32 x 4){
     Format_32_32_32_32_UInt = 0x00000112
+    """128 bits (32 x 4){"""
     Format_32_32_32_32_SInt = 0x00000312
     Format_32_32_32_32_Single = 0x00000813
 
-# Represents how the terms of the blend function are combined.
-
 
 class GX2BlendCombine(IntEnum):
+    """Represents how the terms of the blend function are combined."""
     Add = 0
     SourceMinusDestination = 1
     Minimum = 2
     Maximum = 3
     DestinationMinusSource = 4
 
-# Represents the factors used in the blend function.
-
 
 class GX2BlendFunction(IntEnum):
+    """Represents the factors used in the blend function"""
     Zero = 0
     One = 1
     SourceColor = 2
@@ -116,10 +115,9 @@ class GX2BlendFunction(IntEnum):
     ConstantAlpha = 19
     OneMinusConstantAlpha = 20
 
-# Represents compare functions used for depth and stencil tests.
-
 
 class GX2CompareFunction(IntEnum):
+    """Represents compare functions used for depth and stencil tests."""
     Never = 0
     Less = 1
     Equal = 2
@@ -129,10 +127,9 @@ class GX2CompareFunction(IntEnum):
     GreaterOrEqual = 6
     Always = 7
 
-# Represents the source channels to map to a color channel in textures.
-
 
 class GX2CompSel(IntEnum):
+    """Represents the source channels to map to a color channel in textures."""
     ChannelR = 0
     ChannelG = 1
     ChannelB = 2
@@ -140,135 +137,147 @@ class GX2CompSel(IntEnum):
     Always0 = 4
     Always1 = 5
 
-# Represents the vertex order of front-facing polygons.
-
 
 class GX2FrontFaceMode(IntEnum):
+    """Represents the vertex order of front-facing polygons."""
     CounterClockwise = 0
     Clockwise = 1
 
-# Represents the type in which vertex indices are stored.
-
 
 class GX2IndexFormat(IntEnum):
+    """Represents the type in which vertex indices are stored."""
     UInt16LittleEndian = 0
     UInt32LittleEndian = 1
     UInt16 = 4
     UInt32 = 9
 
-# Represents the logic op function to perform.
-
 
 class GX2LogicOp(IntEnum):
-    # Black
-    Clear = 0x00
-    # White
-    Set = 0xFF
-    # Source (Default)
-    Copy = 0xCC
-    # ~Source
-    InverseCopy = 0x33
-    # Destination
-    NoOperation = 0xAA
-    # ~Destination
-    Inverse = 0x55
-    # Source &amp; Destination
-    And = 0x88
-    # ~(Source &amp; Destination)
-    NAnd = 0x77
-    # Source | Destination
-    Or = 0xEE
-    # ~(Source | Destination)
-    NOr = 0x11
-    # Source ^ Destination
-    XOr = 0x66
-    #  ~(Source ^ Destination)
-    Equivalent = 0x99
-    # Source &amp; ~Destination
-    ReverseAnd = 0x44
-    # ~Source &amp; Destination
-    InverseAnd = 0x22
-    # Source | ~Destination
-    ReverseOr = 0xDD
-    # ~Source | Destination
-    InverseOr = 0xBB
+    """Represents the logic op function to perform."""
 
-# Represents the base primitive used to draw each side of the polygon when dual-sided polygon mode is enabled.
+    Clear = 0x00
+    """Black"""
+
+    Set = 0xFF
+    """White"""
+
+    Copy = 0xCC
+    """Source (Default)"""
+
+    InverseCopy = 0x33
+    """~Source"""
+
+    NoOperation = 0xAA
+    """Destination"""
+
+    Inverse = 0x55
+    """~Destination"""
+
+    And = 0x88
+    """Source & Destination"""
+
+    NAnd = 0x77
+    """~(Source & Destination)"""
+
+    Or = 0xEE
+    """Source | Destination"""
+
+    NOr = 0x11
+    """~(Source | Destination)"""
+
+    XOr = 0x66
+    """Source ^ Destination"""
+
+    Equivalent = 0x99
+    """ ~(Source ^ Destination)"""
+
+    ReverseAnd = 0x44
+    """Source & ~Destination"""
+
+    InverseAnd = 0x22
+    """~Source & Destination"""
+
+    ReverseOr = 0xDD
+    """Source | ~Destination"""
+
+    InverseOr = 0xBB
+    """~Source | Destination"""
 
 
 class GX2PolygonMode(IntEnum):
+    """Represents the base primitive used to draw each side of the polygon
+    when dual-sided polygon mode is enabled."""
     Point = 0
     Line = 1
     Triangle = 2
 
-# Represents the type of primitives to draw.
-
 
 class GX2PrimitiveType(IntEnum):
-    # Requires at least 1 element and 1 more to draw another primitive.
+    """Represents the type of primitives to draw."""
+
     Points = 0x01
+    """Requires at least 1 element and 1 more to draw another primitive."""
 
-    # Requires at least 2 elements and 2 more to draw another primitive.
     Lines = 0x02
+    """Requires at least 2 elements and 2 more to draw another primitive."""
 
-    # Requires at least 2 elements and 1 more to draw another primitive.
     LineStrip = 0x03
+    """Requires at least 2 elements and 1 more to draw another primitive."""
 
-    # Requires at least 3 elements and 3 more to draw another primitive.
     Triangles = 0x04
+    """Requires at least 3 elements and 3 more to draw another primitive."""
 
-    # Requires at least 3 elements and 1 more to draw another primitive.
     TriangleFan = 0x05
+    """Requires at least 3 elements and 1 more to draw another primitive."""
 
-    # Requires at least 3 elements and 1 more to draw another primitive.
     TriangleStrip = 0x06
+    """Requires at least 3 elements and 1 more to draw another primitive."""
 
-    # Requires at least 4 elements and 4 more to draw another primitive.
     LinesAdjacency = 0x0A
+    """Requires at least 4 elements and 4 more to draw another primitive."""
 
-    # Requires at least 4 elements and 1 more to draw another primitive.
     LineStripAdjacency = 0x0B
+    """Requires at least 4 elements and 1 more to draw another primitive."""
 
-    # Requires at least 6 elements and 6 more to draw another primitive.
     TrianglesAdjacency = 0x0C
+    """Requires at least 6 elements and 6 more to draw another primitive."""
 
-    # Requires at least 6 elements and 2 more to draw another primitive.
     TriangleStripAdjacency = 0x0D
+    """Requires at least 6 elements and 2 more to draw another primitive."""
 
-    # Requires at least 3 elements and 3 more to draw another primitive.
     Rects = 0x11
+    """Requires at least 3 elements and 3 more to draw another primitive."""
 
-    # Requires at least 2 elements and 1 more to draw another primitive.
     LineLoop = 0x12
+    """Requires at least 2 elements and 1 more to draw another primitive."""
 
-    # Requires at least 4 elements and 4 more to draw another primitive.
     Quads = 0x13
+    """Requires at least 4 elements and 4 more to draw another primitive."""
 
-    # Requires at least 4 elements and 2 more to draw another primitive.
     QuadStrip = 0x14
+    """Requires at least 4 elements and 2 more to draw another primitive."""
 
-    # Requires at least 2 elements and 2 more to draw another primitive.
     TessellateLines = 0x82
+    """Requires at least 2 elements and 2 more to draw another primitive."""
 
-    # Requires at least 2 elements and 1 more to draw another primitive.
     TessellateLineStrip = 0x83
+    """Requires at least 2 elements and 1 more to draw another primitive."""
 
-    # Requires at least 3 elements and 3 more to draw another primitive.
     TessellateTriangles = 0x84
+    """Requires at least 3 elements and 3 more to draw another primitive."""
 
-    # Requires at least 3 elements and 1 more to draw another primitive.
     TessellateTriangleStrip = 0x86
+    """Requires at least 3 elements and 1 more to draw another primitive."""
 
-    # Requires at least 4 elements and 4 more to draw another primitive.
     TessellateQuads = 0x93
+    """Requires at least 4 elements and 4 more to draw another primitive."""
 
-    # Requires at least 4 elements and 2 more to draw another primitive.
     TessellateQuadStrip = 0x94
-
-# Represents the stencil function to be performed if stencil tests pass.
+    """Requires at least 4 elements and 2 more to draw another primitive."""
 
 
 class GX2StencilFunction(IntEnum):
+    """Represents the stencil function to be performed if stencil tests pass."""
     Keep = 0
     Zero = 1
     Replace = 2
@@ -278,10 +287,9 @@ class GX2StencilFunction(IntEnum):
     IncrementWrap = 6
     DecrementWrap = 7
 
-# Represents shapes of a given surface or texture.
-
 
 class GX2SurfaceDim(IntEnum):
+    """Represents shapes of a given surface or texture."""
     Dim1D = 0
     Dim2D = 1
     Dim3D = 2
@@ -291,10 +299,9 @@ class GX2SurfaceDim(IntEnum):
     Dim2DMsaa = 6
     Dim2DMsaaArray = 7
 
-# Represents desired texture, color-buffer, depth-buffer, or scan-buffer formats.
-
 
 class GX2SurfaceFormat(IntEnum):
+    """Represents desired texture, color-buffer, depth-buffer, or scan-buffer formats."""
     Invalid = 0x00000000
     TC_R8_UNorm = 0x00000001
     TC_R8_UInt = 0x00000101
@@ -355,30 +362,28 @@ class GX2SurfaceUse(IntFlag):
     ColorBufferFinalTV = FinalTV | ColorBuffer
     ColorBufferTextureFinalTV = FinalTV | ColorBufferTexture
 
-# Represents maximum desired anisotropic filter ratios. Higher ratios give better image quality, but slower
-# performance.
-
 
 class GX2TexAnisoRatio(IntEnum):
+    """Represents maximum desired anisotropic filter ratios.
+    Higher ratios give better image quality, but slower performance.
+    """
     Ratio_1_1 = 0
     Ratio_2_1 = 1
     Ratio_4_1 = 2
     Ratio_8_1 = 3
     Ratio_16_1 = 4
 
-# Represents type of border color to use.
-
 
 class GX2TexBorderType(IntEnum):
+    """Represents type of border color to use."""
     ClearBlack = 0
     SolidBlack = 1
     SolidWhite = 2
     UseRegister = 3
 
-# Represents how to treat texture coordinates outside of the normalized coordinate texture range.
-
 
 class GX2TexClamp(IntEnum):
+    """Represents how to treat texture coordinates outside of the normalized coordinate texture range."""
     Wrap = 0
     Mirror = 1
     Clamp = 2
@@ -389,33 +394,29 @@ class GX2TexClamp(IntEnum):
     MirrorOnceBorder = 7
     ClampToEdge = 8
 
-# Represents desired texture filter options between mip levels.
-
 
 class GX2TexMipFilterType(IntEnum):
+    """Represents desired texture filter options between mip levels."""
     NoMip = 0
     Point = 1
     Linear = 2
 
-# Represents desired texture filter options within a plane.
-
 
 class GX2TexXYFilterType(IntEnum):
+    """Represents desired texture filter options within a plane."""
     Point = 0
     Bilinear = 1
 
-# Represents desired texture filter options between Z planes.
-
 
 class GX2TexZFilterType(IntEnum):
+    """Represents desired texture filter options between Z planes."""
     UseXY = 0
     Point = 1
     Linear = 2
 
-# Represents the desired tiling modes for a surface.
-
 
 class GX2TileMode(IntEnum):
+    """Represents the desired tiling modes for a surface."""
     Default = 0
     LinearAligned = 1
     Mode1dTiledThin1 = 2
