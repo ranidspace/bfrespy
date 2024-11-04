@@ -13,16 +13,16 @@ class GX2AAMode(IntEnum):
 class GX2AttribFormat(IntEnum):
     """Represents the format of a vertex attribute entry"""
     Format_8_UNorm = 0x00000000
-    """8 bits (8 x 1)"""
+    # 8 bits (8 x 1)
     Format_8_UInt = 0x00000100
     Format_8_SNorm = 0x00000200
     Format_8_SInt = 0x00000300
     Format_8_UIntToSingle = 0x00000800
     Format_8_SIntToSingle = 0x00000A00
     Format_4_4_UNorm = 0x00000001
-    """8 bits (4 x 2)"""
+    # 8 bits (4 x 2)
     Format_16_UNorm = 0x00000002
-    """16 bits (16 x 1)"""
+    # 16 bits (16 x 1)
     Format_16_UInt = 0x00000102
     Format_16_SNorm = 0x00000202
     Format_16_SInt = 0x00000302
@@ -30,18 +30,18 @@ class GX2AttribFormat(IntEnum):
     Format_16_UIntToSingle = 0x00000802
     Format_16_SIntToSingle = 0x00000A02
     Format_8_8_UNorm = 0x00000004
-    """16 bits (8 x 2)"""
+    # 16 bits (8 x 2)
     Format_8_8_UInt = 0x00000104
     Format_8_8_SNorm = 0x00000204
     Format_8_8_SInt = 0x00000304
     Format_8_8_UIntToSingle = 0x00000804
     Format_8_8_SIntToSingle = 0x00000A04
     Format_32_UInt = 0x00000105
-    """32 bits (32 x 1)"""
+    # 32 bits (32 x 1)
     Format_32_SInt = 0x00000305
     Format_32_Single = 0x00000806
     Format_16_16_UNorm = 0x00000007
-    """32 bits (16 x 2)"""
+    # 32 bits (16 x 2)
     Format_16_16_UInt = 0x00000107
     Format_16_16_SNorm = 0x00000207
     Format_16_16_SInt = 0x00000307
@@ -49,25 +49,25 @@ class GX2AttribFormat(IntEnum):
     Format_16_16_UIntToSingle = 0x00000807
     Format_16_16_SIntToSingle = 0x00000A07
     Format_10_11_11_Single = 0x00000809
-    """32 bits (10/11 x 3)"""
+    # 32 bits (10/11 x 3)
     Format_8_8_8_8_UNorm = 0x0000000A
-    """32 bits (8 x 4)"""
+    # 32 bits (8 x 4)
     Format_8_8_8_8_UInt = 0x0000010A
     Format_8_8_8_8_SNorm = 0x0000020A
     Format_8_8_8_8_SInt = 0x0000030A
     Format_8_8_8_8_UIntToSingle = 0x0000080A
     Format_8_8_8_8_SIntToSingle = 0x00000A0A
     Format_10_10_10_2_UNorm = 0x0000000B
-    """32 bits (10 x 3 + 2)"""
+    # 32 bits (10 x 3 + 2)
     Format_10_10_10_2_UInt = 0x0000010B
     Format_10_10_10_2_SNorm = 0x0000020B  # High 2 bits are UNorm
     Format_10_10_10_2_SInt = 0x0000030B
     Format_32_32_UInt = 0x0000010C
-    """64 bits (32 x 2)"""
+    # 64 bits (32 x 2)
     Format_32_32_SInt = 0x0000030C
     Format_32_32_Single = 0x0000080D
     Format_16_16_16_16_UNorm = 0x0000000E
-    """64 bits (16 x 4)"""
+    # 64 bits (16 x 4)
     Format_16_16_16_16_UInt = 0x0000010E
     Format_16_16_16_16_SNorm = 0x0000020E
     Format_16_16_16_16_SInt = 0x0000030E
@@ -75,11 +75,11 @@ class GX2AttribFormat(IntEnum):
     Format_16_16_16_16_UIntToSingle = 0x0000080E
     Format_16_16_16_16_SIntToSingle = 0x00000A0E
     Format_32_32_32_UInt = 0x00000110
-    """96 bits (32 x 3)"""
+    # 96 bits (32 x 3)
     Format_32_32_32_SInt = 0x00000310
     Format_32_32_32_Single = 0x00000811
     Format_32_32_32_32_UInt = 0x00000112
-    """128 bits (32 x 4){"""
+    # 128 bits (32 x 4){
     Format_32_32_32_32_SInt = 0x00000312
     Format_32_32_32_32_Single = 0x00000813
 
