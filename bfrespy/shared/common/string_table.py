@@ -1,10 +1,11 @@
 import io
 from ..core import IResData, ResFileLoader
 
+
 class StringTable(IResData):
     def __init__(self):
         self.strings = []
-    
+
     def load(self, loader: ResFileLoader):
         self.strings.clear()
         if loader.is_switch:

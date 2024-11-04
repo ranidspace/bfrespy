@@ -2,11 +2,12 @@ import io
 from bfrespy.shared.core import ResFileLoader, IResData
 from ..shared.res_file import ResFile
 
+
 class ResFileSwitchLoader(ResFileLoader):
-    def __init__(self, 
-                 res_file: ResFile, 
+    def __init__(self,
+                 res_file: ResFile,
                  stream: io.BufferedReader,
-                 leave_open = False, 
+                 leave_open=False,
                  res_data: IResData = None
                  ):
         super().__init__(res_file, stream, leave_open, res_data)
@@ -23,15 +24,15 @@ class ResFileSwitchLoader(ResFileLoader):
         # Rewrite when relocation tables are implemented I guess?
         offset = self.read_uint64()
         return 0 if offset == 0 else offset
-    
+
     def readsize(self):
         return self.read_uint64()
-    
+
     def load_header_block(self):
         offset = self.read_uint32()
         size = self.read_uint64()
 
-    def load_string(self, encoding = None) -> str:
+    def load_string(self, encoding=None) -> str:
         offset = self.read_offset()
         if (offset == 0):
             return None
@@ -39,12 +40,12 @@ class ResFileSwitchLoader(ResFileLoader):
         if (offset < 0):
             return ""
         with self.TemporarySeek(self, offset, io.SEEK_SET) as reader:
-            try: 
+            try:
                 return self.read_string(encoding)
             except IndexError:
                 return ""
-        
-    def load_strings(self, count, encoding = None):
+
+    def load_strings(self, count, encoding=None):
         offsets = self.read_uint64s(count)
         names: list[str] = [None] * len(offsets)
         with self.TemporarySeek(self):
@@ -53,12 +54,9 @@ class ResFileSwitchLoader(ResFileLoader):
                     continue
                 # XXX Implement String Cache again
                 else:
-                    self.seek(offset)
+                    self.seek(offset, io.SEEK_SET)
                     names[i] = self.read_string(encoding)
 
-    def read_string(self, encoding = None):
+    def read_string(self, encoding=None):
         size = self.read_uint16()
         return self.read_null_string(encoding)
-
-
-        

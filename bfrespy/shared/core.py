@@ -1,6 +1,7 @@
 import io
 from abc import ABC, abstractmethod
 from ..binary_io import BinaryReader
+from ..shared import ResFile
 
 
 class IResData(ABC):
@@ -9,34 +10,27 @@ class IResData(ABC):
         """Loads raw data from the loader data stream into instances"""
         pass
 
+
 class ResFileLoader(BinaryReader):
-    def __init__(self, 
-                 res_file, 
-                 stream: io.BufferedReader,
-                 leave_open = False, 
-                 res_data: IResData = None
-                 ):
+    def __init__(self, res_file: ResFile, stream: io.BufferedReader,
+                 leave_open=False, res_data=None):
         super().__init__(stream, leave_open)
         self.res_file = res_file
         self._data_map = {}
         self.is_switch: bool
         if (res_data):
             self.importable_file = res_data
-    
+
     # Internal Methods
 
-    def import_section(self,
-                       raw = None,
-                       res_data: IResData = None,
-                       res_file = None,
-                       ):
+    def import_section(self, raw=None, res_data=None, res_file=None):
         if raw and res_data and res_file:
             platform_switch = False
-            
+
             with BinaryReader(raw) as reader:
                 reader.seek(24, io.SEEK_SET)
                 platform_switch = reader.read_uint32 != 0
-            
+
             if (platform_switch):
                 from ..switch import ResFileSwitchLoader
                 with ResFileSwitchLoader(res_file, raw, res_data) as reader:
@@ -44,17 +38,17 @@ class ResFileLoader(BinaryReader):
         else:
             self.read_imported_file_header()
 
-            if type(self.importable_file) is Shape:
-                shape_offset = self.read_uint32()
-                vertex_buff_offs = self.read_uint32()
+            if isinstance(Shape, self.importable_file):
+                shape_offs = self.read_uint32()
+                vtx_buff_offs = self.read_uint32()
 
-                self.seek(shape_offset, io.SEEK_SET)
+                self.seek(shape_offs, io.SEEK_SET)
                 self.importable_file.load(self)
 
-                self.seek(vertex_buff_offs, io.SEEK_SET)
+                self.seek(vtx_buff_offs, io.SEEK_SET)
                 buffer = VertexBuffer()
                 buffer.load(self)
-                self.importable_file.vertex_buffer = buffer
+                self.importable_file.vtx_buffer = buffer
             else:
                 self.importable_file.load(self)
 
@@ -68,16 +62,16 @@ class ResFileLoader(BinaryReader):
         self.endianness = '>'
         bom = self.__byte_order[self.read_uint16()]
         self.endianness = bom
-    
+
     __byte_order = {
         0xFEFF: '>',
         0xFFFE: '<',
-    } 
+    }
 
     def execute(self):
         self.res_file.load(self)
-    
-    def load(self, T, use_offset = True):
+
+    def load(self, T, use_offset=True):
         if (not use_offset):
             return self.__read_res_data(T)
         offset = self.read_offset()
@@ -85,28 +79,29 @@ class ResFileLoader(BinaryReader):
             return T()
         with self.TemporarySeek(self, offset, io.SEEK_SET):
             return self.__read_res_data(T)
-        
 
-    def load_custom(self, T, callback, arg, offset = None):
-        offset = (offset 
-                  if offset is not None 
+    def load_custom(self, T, callback, *args, offset=None):
+        offset = (offset
+                  if offset is not None
                   else self.read_offset())
         if (offset == 0):
             return T()
         with (self.TemporarySeek(self, offset, io.SEEK_SET)):
-            return callback(arg)
+            return callback(*args)
 
-    def load_dict(self):
+    def load_dict(self, T):
         from .common import ResDict
+
         offset = self.read_offset()
         if (offset == 0):
             return ResDict()
+
         with self.TemporarySeek(self):
             dict = ResDict()
-            dict.load()
+            dict.load(T, self)
             return dict
-    
-    def load_list(self, T, count, offset = None):
+
+    def load_list(self, T, count, offset=None):
         list_ = []
         offset = offset if offset else self.read_offset()
         if (offset == 0 or count == 0):
@@ -116,8 +111,8 @@ class ResFileLoader(BinaryReader):
                 list_.append(self.__read_res_data(T))
                 count -= 1
             return list_
-    
-    def load_string(self, encoding = None):
+
+    def load_string(self, encoding=None):
         """Reads and returns a str instance from the following offset or None
         if the read offset is 0.
         """
@@ -127,26 +122,39 @@ class ResFileLoader(BinaryReader):
         # TODO implement string cache
         with self.TemporarySeek(self, offset, io.SEEK_SET):
             return self.read_string(encoding)
-        
-    def load_dict_values(self, T: IResData,
-                         dict_offset = None, 
-                         values_offset = None):
+
+    def load_strings(self, count, encoding=None):
+        """Reads and returns count of str from the following offset.
+        """
+        offsets = self.read_offsets(count)
+        names = [None] * len(offsets)
+        with self.TemporarySeek(self):
+            for i, offset in enumerate(offsets):
+                if (offset == 0):
+                    continue
+
+                # TODO implement string cache
+                self.seek(offset, io.SEEK_SET)
+                names[i] = self.read_string(encoding)
+            return names
+
+    def load_dict_values(self, T: IResData, dict_offs=None, values_offs=None):
         """Reads and returns a ResDict instance with elements of type T from
         the following offset or returns an empty instance if the
         read offset is 0.
         """
         from .common import ResDict
-        if not (dict_offset or values_offset):
-            values_offset = self.read_offset()
-            dict_offset = self.read_offset()
-        if (dict_offset == 0):
+        if not (dict_offs or values_offs):
+            values_offs = self.read_offset()
+            dict_offs = self.read_offset()
+        if (dict_offs == 0):
             return ResDict()
-        with self.TemporarySeek(self, dict_offset, io.SEEK_SET):
+        with self.TemporarySeek(self, dict_offs, io.SEEK_SET):
             dict_ = ResDict()
-            dict_.load(self)
+            dict_.load(T, self)
 
             keys = list(dict_.keys())
-            values = self.load_list(T, len(dict_), values_offset)
+            values = self.load_list(T, len(dict_), values_offs)
 
             dict_.clear()
             for i in range(len(keys)):
@@ -158,7 +166,7 @@ class ResFileLoader(BinaryReader):
 
     def read_string(self, encoding):
         return self.read_null_string(encoding)
-    
+
     def check_signature(self, valid_signature):
         """Reads a BFRES signature consisting of 4 ASCII characters encoded as
         a UInt32 and checks for validity.
@@ -168,23 +176,21 @@ class ResFileLoader(BinaryReader):
             print(f"Invalid signature, expected '{valid_signature}' but got\
                    '{signature}' at position {self.tell()}.")
 
-
-
     def read_offset(self):
         """Reads a BFRES offset which is relative to itself,
         and returns the absolute address."""
         offset = self.read_uint32
-        return (0 
+        return (0
                 if offset == 0
                 else self.tell() - 4 + offset
                 )
-    
+
     def read_offsets(self, count) -> list[int]:
         values = [] * count
         for i in count:
             values.append(self.read_offset())
         return values
-    
+
     def read_bit32_bools(self, count) -> list[bool]:
         booleans = [None] * count
         if (count == 0):
@@ -208,10 +214,49 @@ class ResFileLoader(BinaryReader):
         instance = T()
         instance.load(self)
 
-        
         existing_instance = self._data_map.get(offset)
         if existing_instance:
-                return T(existing_instance)
+            return T(existing_instance)
         else:
             self._data_map[offset] = instance
             return instance
+
+# Byte/Uint32 Extensions
+
+
+def _decode(byte, first_bit, bits):
+    """Returns a int instance represented by the given number of bits,
+    starting at the first_bit.
+    """
+    return ((byte >> first_bit) & ((1 << bits) - 1))
+
+
+def _enable_bit(byte, index):
+    return byte | (1 << index)
+
+
+def _encode(byte, value, first_bit, bits):
+    mask = (((1 << bits) - 1) << first_bit)
+    byte &= ~mask
+    value = (value << first_bit) & mask
+    return (byte | value)
+
+
+def _disable_bit(byte, index):
+    return byte & ~(1 << index)
+
+
+def _get_bit(byte, index):
+    """Returns a value indicating whether the bit at the index in the current
+    Byte is enabled or disabled.
+    """
+    return (byte & (1 << index)) != 0
+
+
+def _set_bit(byte, index: int, enable: bool):
+    """Returns the current Byte with the bit at the index enabled or disabled,
+    according to enable."""
+    if (enable):
+        return _enable_bit(byte, index)
+    else:
+        return _disable_bit(byte, index)
