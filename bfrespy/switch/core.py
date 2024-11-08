@@ -1,6 +1,6 @@
 import io
-from bfrespy.shared.core import ResFileLoader, IResData
-from ..shared.res_file import ResFile
+from bfrespy.core import ResFileLoader, IResData
+from bfrespy import ResFile
 
 
 class ResFileSwitchLoader(ResFileLoader):
@@ -39,7 +39,7 @@ class ResFileSwitchLoader(ResFileLoader):
         # TODO Implement String Cache
         if (offset < 0):
             return ""
-        with self.TemporarySeek(self, offset, io.SEEK_SET) as reader:
+        with self.temporary_seek(offset, io.SEEK_SET) as reader:
             try:
                 return self.read_string(encoding)
             except IndexError:
@@ -47,15 +47,16 @@ class ResFileSwitchLoader(ResFileLoader):
 
     def load_strings(self, count, encoding=None):
         offsets = self.read_uint64s(count)
-        names: list[str] = [None] * len(offsets)
-        with self.TemporarySeek(self):
+        names = []
+        with self.temporary_seek():
             for i, offset in enumerate(offsets):
                 if offset == 0:
-                    continue
+                    names.append(None)
                 # XXX Implement String Cache again
                 else:
                     self.seek(offset, io.SEEK_SET)
-                    names[i] = self.read_string(encoding)
+                    names.append(self.read_string(encoding))
+        return names
 
     def read_string(self, encoding=None):
         size = self.read_uint16()

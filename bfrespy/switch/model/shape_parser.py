@@ -1,6 +1,7 @@
 import io
 from ..core import ResFileSwitchLoader
-from ...shared.models import Shape, ShapeFlags, Mesh, VertexBuffer, KeyShape
+from bfrespy.models import Shape, ShapeFlags, Mesh, VertexBuffer, KeyShape
+import bfrespy.binary_io
 
 
 class ShapeParser:
@@ -24,7 +25,7 @@ class ShapeParser:
             user_pointer = loader.read_int64()
         else:
             user_pointer = loader.read_int64()
-            shape.radius_array.Add(loader.read_single())
+            shape.radius_array.append(loader.read_single())
         if (loader.res_file.version_major2 < 9):
             shape.flags = ShapeFlags(loader.read_int32())
         idx = loader.read_uint16()
@@ -46,7 +47,7 @@ class ShapeParser:
 
         shape.radius_array = []
         if (radius_offs != 0 and num_mesh > 0):
-            with (loader.TemporarySeek(radius_offs, io.SEEK_SET)):
+            with (loader.temporary_seek(radius_offs, io.SEEK_SET)):
                 if (loader.res_file.version_major2 >= 10):
                     # A offset + radius size. Can be per mesh or per bone if there is skinning used.
                     num_boundings = (num_mesh
@@ -54,7 +55,7 @@ class ShapeParser:
                                      else num_skin_bone_idx)
                     for i in range(num_boundings):
                         shape.bounding_radius_list.append(
-                            loader.ReadVector4F())
+                            loader.read_vector4f())
                     # Get largest radius for bounding radius list
                     max_ = max([x[3] for x in shape.bounding_radius_list])
                     shape.radius_array.append(max_)
@@ -69,7 +70,7 @@ class ShapeParser:
             []
             if num_skin_bone_idx == 0
             else loader.load_custom(
-                list, loader.read_uint16s(), num_skin_bone_idx,
+                list, loader.read_uint16s, num_skin_bone_idx,
                 offset=int(skin_bone_idx_list_offs)
             )
         )

@@ -1,1 +1,1 @@
-from .shared import core
+from .res_file import ResFile

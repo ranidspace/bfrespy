@@ -1,8 +1,8 @@
-from . import core
+import bfrespy.core
 from .common import UserData
 
 
-class TextureShared(core.IResData):
+class TextureShared(bfrespy.core.IResData):
     def __init__(self):
         self.name: str
         self.path: str
@@ -16,5 +16,5 @@ class TextureShared(core.IResData):
     def get_swizzled_data(self, arraylevel=None, miplevel=None):
         return None
 
-    def load(self, loader: core.IResData):
+    def load(self, loader: bfrespy.core.IResData):
         pass

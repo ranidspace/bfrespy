@@ -1,4 +1,4 @@
-from ..core import ResFileLoader, IResData
+from bfrespy.core import ResFileLoader, IResData
 from .res_string import ResString
 from abc import abstractmethod
 
@@ -127,7 +127,7 @@ class ResDict(IResData):
 
     # Internal Methods
 
-    def add(self, key, value):
+    def append(self, key, value):
         """Adds the given value under the specified key."""
         node, index = self.__lookup(key, False)
         if node:

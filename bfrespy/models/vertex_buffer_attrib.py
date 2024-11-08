@@ -1,8 +1,8 @@
 from enum import IntEnum
-from ..core import IResData, ResFileLoader
-from ..common import ResDict, Buffer
-from ..gx2 import GX2AttribFormat
-from ...switch.memory_pool import MemoryPool
+from bfrespy.core import IResData, ResFileLoader
+from bfrespy.common import ResDict, Buffer
+from bfrespy.gx2 import GX2AttribFormat
+from bfrespy.switch.memory_pool import MemoryPool
 
 
 class VertexBuffer(IResData):
@@ -22,7 +22,7 @@ class VertexBuffer(IResData):
     def load(self, loader: ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from ...switch import VertexBufferParser
+            from bfrespy.switch.model import VertexBufferParser
             VertexBufferParser.load(loader, self)
 
 
@@ -45,6 +45,7 @@ class VertexAttrib(IResData):
                 SwitchAttribFormat(loader.read_uint16()))
             loader.endianness = '<'
             loader.seek(2)
+            self.offset = loader.read_uint16()
             self.buffer_index = loader.read_uint16()
 
     def __convert_to_gx2(self, att: IntEnum):

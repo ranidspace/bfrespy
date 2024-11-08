@@ -1,6 +1,6 @@
-from ..core import ResFileSwitchLoader
-from ...shared.models import Model, Shape, Skeleton, Material, VertexBuffer
-from ...shared.common import UserData, Buffer
+from bfrespy.switch.core import ResFileSwitchLoader
+from bfrespy.models import Model, Shape, Skeleton, Material, VertexBuffer
+from bfrespy.common import UserData, Buffer
 
 
 class ModelParser:

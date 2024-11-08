@@ -1,7 +1,10 @@
-from ..core import IResData, ResFileLoader
-from ..common import ResDict, UserData
-from .. import Skeleton
-from . import VertexBuffer, Shape, Material
+from bfrespy.core import IResData, ResFileLoader
+from bfrespy.common import ResDict, UserData
+
+from .skeleton import Skeleton
+from .vertex_buffer_attrib import VertexBuffer
+from .shape import Shape
+from .material import Material
 
 
 class Model(IResData):
@@ -32,8 +35,8 @@ class Model(IResData):
     def load(self, loader: ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from ...switch import ModelParser
-            ModelParser.read(loader, self)
+            import bfrespy.switch.model
+            bfrespy.switch.model.ModelParser.read(loader, self)
         else:
             self.name = loader.load_string()
             self.path = loader.load_string()

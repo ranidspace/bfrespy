@@ -1,4 +1,4 @@
-from ..core import IResData, ResFileLoader
+from bfrespy.core import IResData, ResFileLoader
 from enum import IntEnum
 
 
@@ -8,10 +8,14 @@ class UserData(IResData):
         self.type: UserDataType
 
         self.name = ""
-        self.set_value(int[0])
+        self.set_value([])
 
     def get_data(self):
         return self._value
+
+    def set_value(self, value):
+        self.type = UserDataType.Int32
+        self._value = value
 
     def load(self, loader: ResFileLoader):
         if (loader.is_switch):
@@ -59,7 +63,7 @@ class UserData(IResData):
             loader.seek(1)
             match self.type:
                 case UserDataType.Byte:
-                    self._value = loader.read_sbytes(count)
+                    self._value = loader.read_bytes(count)
                 case UserDataType.Int32:
                     self._value = loader.read_int32s(count)
                 case UserDataType.Single:

@@ -1,4 +1,4 @@
-from ..core import IResData, ResFileLoader
+from bfrespy.core import IResData, ResFileLoader
 
 
 class ResString(IResData):

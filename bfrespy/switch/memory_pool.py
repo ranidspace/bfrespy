@@ -1,5 +1,4 @@
-from ..shared.core import IResData
-from ..shared.core import ResFileLoader
+from bfrespy.core import IResData, ResFileLoader
 
 
 class MemoryPool(IResData):
@@ -25,13 +24,14 @@ class BufferSize(IResData):
 
 
 class BufferInfo(IResData):
-    buff_offs: int
-    vtx_buffer_data: list[bytearray]
-    index_buffer_data: list[bytearray]
+    buff_offs = None
+    vtx_buffer_data: list[bytearray] = None
+    index_buffer_data: list[bytearray] = None
     unk = 34
 
-    def load(self, loader: ResFileLoader):
-        self.unk = loader.read_uint32()
+    @classmethod
+    def load(cls, loader: ResFileLoader):
+        cls.unk = loader.read_uint32()
         size = loader.read_uint32()
-        self.buff_offs = loader.read_int64()
+        cls.buff_offs = loader.read_int64()
         padding = loader.read_bytes(16)

@@ -1,4 +1,5 @@
-from ..core import IResData, ResFileLoader
+from bfrespy.core import IResData, ResFileLoader
+import io
 
 
 class Buffer(IResData):
@@ -23,7 +24,7 @@ class Buffer(IResData):
         num_buffering = loader.read_uint16()
         context_pointer = loader.read_uint32()
         data_offs = loader.read_offset()
-        with loader.TemporarySeek(data_offs):
+        with loader.temporary_seek(data_offs):
             data = []
             for i in range(num_buffering):
                 data.append(loader.read_bytes(size))

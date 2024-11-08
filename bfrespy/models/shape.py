@@ -1,8 +1,10 @@
-from enum import IntFlag
-from ..core import IResData, ResFileLoader
-from ..common import ResDict, Buffer
-from ..gx2 import GX2PrimitiveType, GX2IndexFormat
-from ...switch.memory_pool import MemoryPool, BufferSize, BufferInfo
+from dataclasses import dataclass
+from enum import IntFlag, IntEnum
+
+from bfrespy.core import IResData, ResFileLoader
+from bfrespy.common import ResDict, Buffer
+from bfrespy.gx2 import GX2PrimitiveType, GX2IndexFormat
+from bfrespy.switch.memory_pool import MemoryPool, BufferSize, BufferInfo
 from . import VertexBuffer
 
 
@@ -16,7 +18,7 @@ class Shape(IResData):
         self.bone_idx = 0
         self.vtx_buff_idx = 0
         self.radius_array = []
-        self.bounding_radius_list: list[tuple[float]]
+        self.bounding_radius_list: list[tuple[float]] = []
         self.vtx_skin_count = 0
         self.target_attrib_count = 0
         self.meshes: list[Mesh] = []
@@ -52,7 +54,7 @@ class Shape(IResData):
     def load(self, loader: ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from ...switch import ShapeParser
+            from bfrespy.switch.model import ShapeParser
             ShapeParser.read(loader, self)
 
 
@@ -100,20 +102,20 @@ class Mesh(IResData):
             buffer = loader.read_offset()
             buffer_size = loader.load(BufferSize)
             face_buff_offs = loader.read_uint32()
-            self.primitive_type = self.primitive_type_list(
-                loader.read_uint32()
-            )
-            self.index_format = self.index_list(
+            self.primitive_type = self.primitive_type_list[
+                self.SwitchPrimitiveType(loader.read_uint32())
+            ]
+            self.index_format = self.index_list[
                 self.SwitchIndexFormat(loader.read_uint32())
-            )
+            ]
             index_count = loader.read_uint32()
             self.first_vtx = loader.read_uint32()
             num_submesh = loader.read_uint16()
             padding = loader.read_uint16()
-            self.submeshes = loader.load_custom(
-                SubMesh, num_submesh, submesh_array_offs
+            self.submeshes = loader.load_list(
+                SubMesh, num_submesh, offset=submesh_array_offs
             )
-            data_offs = int(BufferInfo.BufferOffset) + face_buff_offs
+            data_offs = int(BufferInfo.buff_offs) + face_buff_offs
 
             self.index_buffer = Buffer()
             self.index_buffer.flags = buffer_size.flags
@@ -121,6 +123,41 @@ class Mesh(IResData):
             self.index_buffer.data[0] = loader.load_custom(
                 list, loader.read_bytes, buffer_size.size, offset=data_offs
             )
+
+    class SwitchIndexFormat(IntEnum):
+        UnsignedByte = 0
+        UInt16 = 1
+        UInt32 = 2
+
+    class SwitchPrimitiveType(IntEnum):
+        Points = 0x00
+        Lines = 0x01
+        LineStrip = 0x02
+        Triangles = 0x03
+        TriangleStrip = 0x04
+        LinesAdjacency = 0x05
+        LineStripAdjacency = 0x06
+        TrianglesAdjacency = 0x07
+        TriangleStripAdjacency = 0x08
+        Patches = 0x09
+
+    index_list = {
+        SwitchIndexFormat.UInt16: GX2IndexFormat.UInt16LittleEndian,
+        SwitchIndexFormat.UInt32: GX2IndexFormat.UInt32LittleEndian,
+        SwitchIndexFormat.UnsignedByte: GX2IndexFormat.UInt16LittleEndian,
+    }
+
+    primitive_type_list = {
+        SwitchPrimitiveType.Triangles: GX2PrimitiveType.Triangles,
+        SwitchPrimitiveType.TrianglesAdjacency: GX2PrimitiveType.TrianglesAdjacency,
+        SwitchPrimitiveType.TriangleStrip: GX2PrimitiveType.TriangleStripAdjacency,
+        SwitchPrimitiveType.TriangleStripAdjacency: GX2PrimitiveType.TriangleStripAdjacency,
+        SwitchPrimitiveType.Lines: GX2PrimitiveType.Lines,
+        SwitchPrimitiveType.LinesAdjacency: GX2PrimitiveType.LinesAdjacency,
+        SwitchPrimitiveType.LineStrip: GX2PrimitiveType.LineStrip,
+        SwitchPrimitiveType.LineStripAdjacency: GX2PrimitiveType.LineStripAdjacency,
+        SwitchPrimitiveType.Points: GX2PrimitiveType.Points,
+    }
 
 
 class SubMesh(IResData):
@@ -161,10 +198,10 @@ class BoundingNode(IResData):
         self.submesh_cnt = loader.read_uint16()
 
 
+@dataclass
 class Bounding:
-    def __init__(self):
-        center: tuple
-        extent: tuple
+    center: tuple
+    extent: tuple
 
 
 class ShapeFlags(IntFlag):

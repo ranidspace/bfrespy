@@ -1,8 +1,9 @@
-from enum import IntEnum, auto
-from .. import core, gx2
-from ..common import ResDict, ResString, TextureRef, UserData, \
-    Srt2D, Srt3D, TexSrt, TexSrtMode
 import math
+from enum import IntEnum, auto
+
+from bfrespy import core, gx2
+from bfrespy.common import (ResDict, ResString, TextureRef, UserData,
+                            Srt2D, Srt3D, TexSrt, TexSrtMode)
 
 
 class Material(core.IResData):
@@ -18,7 +19,7 @@ class Material(core.IResData):
 
         self.shader_assign = ShaderAssign()
 
-        self.render_infos: ResDict[RenderInfo] = ResDict()
+        self.renderinfos: ResDict[RenderInfo] = ResDict()
         self.texture_refs: list[TextureRef] = []
         self.samplers: ResDict[Sampler] = ResDict()
         self.userdata: ResDict[UserData] = ResDict()
@@ -28,6 +29,7 @@ class Material(core.IResData):
         self.volatileflags = bytearray()
 
         self.render_state: RenderState
+        self.renderinfo_size: int
 
         self.texture_slot_array: list[int]
         self.sampler_slot_array: list[int]
@@ -53,13 +55,13 @@ class Material(core.IResData):
     def load(self, loader: core.ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from ...switch import MaterialParser
+            from bfrespy.switch.model import MaterialParser
             MaterialParser.load(loader, self)
         else:
             self.name = loader.load_string()
             self.flags = MaterialFlags(loader.read_uint32())
             idx = loader.read_uint16()
-            num_render_info = loader.read_uint16()
+            num_renderinfo = loader.read_uint16()
             num_sampler = loader.read_byte()
             num_tex_ref = loader.read_byte()
             num_shader_param = loader.read_uint16()
@@ -67,7 +69,7 @@ class Material(core.IResData):
             siz_param_source = loader.read_uint16()
             siz_param_raw = loader.read_uint16()
             num_user_data = loader.read_uint16()
-            self.render_infos = loader.load_dict < RenderInfo > ()
+            self.renderinfos = loader.load_dict(RenderInfo)
             self.render_state = loader.load(RenderState)
             self.shader_assign = loader.load(ShaderAssign)
             self.texture_refs = loader.load_list(TextureRef, num_tex_ref)
@@ -92,8 +94,8 @@ class Material(core.IResData):
             return
         # XXX this could be done with just a temporary reader and relocation?
         import io
-        from ...binary_io import BinaryReader
-        with BinaryReader(data) as reader:
+        from bfrespy.binary_io import BinaryReader
+        with BinaryReader(io.BytesIO(data)) as reader:
             reader.endianness = endianness
             for param in self.shader_params.values():
                 reader.seek(param.data_offs, io.SEEK_SET)
@@ -145,10 +147,9 @@ class Material(core.IResData):
                               reader.read_vector2f())
         return 0
 
-# uint32
-
 
 class MaterialFlags(IntEnum):
+    # uint32
     None_ = 0
     Visible = 1
 
@@ -211,7 +212,7 @@ class RenderInfo(core.IResData):
         self.type: RenderInfoType
 
         self.name = ""
-        self.set_value()
+        self.set_value([])
 
     @property
     def data(self):
@@ -233,7 +234,7 @@ class RenderInfo(core.IResData):
         return list(self.__value)
 
     def set_value(self, value):
-        if isinstance(value[0], int):
+        if len(value) == 0 or isinstance(value[0], int):
             self.type = RenderInfoType.Int32
         elif isinstance(value[0], float):
             self.type = RenderInfoType.Single
@@ -251,23 +252,20 @@ class RenderInfo(core.IResData):
 
             match (self.type):
                 case RenderInfoType.Int32:
-                    self._value = loader.load_custom(list,
-                                                     loader.read_int32s,
-                                                     count,
-                                                     data_offs)
+                    self._value = loader.load_custom(
+                        list, loader.read_int32s, count, data_offs
+                    )
                 case RenderInfoType.Single:
-                    self._value = loader.load_custom(list,
-                                                     loader.read_singles,
-                                                     count,
-                                                     data_offs)
+                    self._value = loader.load_custom(
+                        list, loader.read_singles, count, data_offs
+                    )
                 case RenderInfoType.String:
                     if (data_offs == 0):  # Some games have empty data offset and no strings
                         self._value = []
                     else:
-                        self._value = loader.load_custom(list,
-                                                         loader.load_strings,
-                                                         count,
-                                                         data_offs)
+                        self._value = loader.load_custom(
+                            list, loader.load_strings, count, data_offs
+                        )
         else:
             count = loader.read_uint16()
             self.type = RenderInfoType(loader.read_byte())
@@ -281,11 +279,20 @@ class RenderInfo(core.IResData):
                 case RenderInfoType.String:
                     self._value = loader.load_strings(count)
 
-# byte
+    def read_data(self, loader: core.ResFileLoader, typ: IntEnum, count):
+        self.type = typ
+        match (self.type):
+            case RenderInfoType.Int32:
+                self.__value = loader.read_int32s(count)
+            case RenderInfoType.Single:
+                self.__value = loader.read_singles(count)
+            case RenderInfoType.String:
+                self.__value = loader.load_strings(count)
 
 
 class RenderInfoType(IntEnum):
     """Represents the data type of elements of the RenderInfo value array."""
+    # byte
     Int32 = 0
     Single = 1
     String = 2
@@ -302,19 +309,17 @@ class RenderState(core.IResData):
 
         # TODO I think this is wii U only
 
-# uint32
-
 
 class RenderStateFlagsMode(IntEnum):
+    # uint32
     Custom = 0
     Opaque = 1
     AlphaMask = 2
     Translucent = 3
 
-# uint32
-
 
 class RenderStateFlagsBlendMode(IntEnum):
+    # uint32
     None_ = 0
     Color = 1
     Logical = 2
@@ -392,10 +397,10 @@ class ShaderParam(core.IResData):
                 fmat_offset = loader.read_uint32()  # Why does this have this????
             self.name = loader.load_string()
 
-# byte
-
 
 class ShaderParamType(IntEnum):
+    # byte
+
     # The value is a single Boolean.
     Bool = 0
 
@@ -500,7 +505,7 @@ class Sampler(core.IResData):
 
     def load(self, loader: core.ResFileLoader):
         if (loader.is_switch):
-            from ...switch import model
+            from bfrespy.switch import model
             sampler = model.SamplerSwitch()
             sampler.load(loader)
             self.tex_sampler = sampler.to_tex_sampler()
@@ -511,8 +516,8 @@ class Sampler(core.IResData):
             idx = loader.read_byte()
             loader.seek(3)
 
-    # byte
     class MaxAnisotropic(IntEnum):
+        # byte
         Ratio_1_1 = 0x1
         Ratio_2_1 = 0x2
         Ratio_4_1 = 0x4
@@ -535,9 +540,9 @@ class Sampler(core.IResData):
         Points = 1 << 4
         Linear = 2 << 4
 
-    # byte
     class CompareFunction(IntEnum):
         """Represents compare functions used for depth and stencil tests."""
+        # byte
         Never = 0
         Less = 1
         Equal = 2
@@ -547,9 +552,9 @@ class Sampler(core.IResData):
         GreaterOrEqual = 6
         Always = 7
 
-    # byte
     class TexBorderType(IntEnum):
         """Represents type of border color to use."""
+        # byte
         White = 0
         Transparent = 1
         Opaque = 2

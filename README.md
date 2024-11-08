@@ -4,7 +4,7 @@ A port of BfresLibrary to python, intended to be used in a blender importer addo
 
 ## Status
 
-Untested, unfucntional
+Reads model data
 
 ## Credits
 

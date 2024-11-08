@@ -1,5 +1,4 @@
 from enum import IntEnum, IntFlag
-from ..shared.models.material import TexSampler
 
 
 class GX2AAMode(IntEnum):

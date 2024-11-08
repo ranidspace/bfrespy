@@ -1,7 +1,6 @@
 import io
 from abc import ABC, abstractmethod
-from ..binary_io import BinaryReader
-from ..shared import ResFile
+from .binary_io import BinaryReader
 
 
 class IResData(ABC):
@@ -12,7 +11,7 @@ class IResData(ABC):
 
 
 class ResFileLoader(BinaryReader):
-    def __init__(self, res_file: ResFile, stream: io.BufferedReader,
+    def __init__(self, res_file, stream: io.BufferedReader,
                  leave_open=False, res_data=None):
         super().__init__(stream, leave_open)
         self.res_file = res_file
@@ -32,7 +31,7 @@ class ResFileLoader(BinaryReader):
                 platform_switch = reader.read_uint32 != 0
 
             if (platform_switch):
-                from ..switch import ResFileSwitchLoader
+                from .switch import ResFileSwitchLoader
                 with ResFileSwitchLoader(res_file, raw, res_data) as reader:
                     reader.import_section()
         else:
@@ -77,7 +76,7 @@ class ResFileLoader(BinaryReader):
         offset = self.read_offset()
         if (offset == 0):
             return T()
-        with self.TemporarySeek(self, offset, io.SEEK_SET):
+        with self.temporary_seek(offset, io.SEEK_SET):
             return self.__read_res_data(T)
 
     def load_custom(self, T, callback, *args, offset=None):
@@ -86,7 +85,7 @@ class ResFileLoader(BinaryReader):
                   else self.read_offset())
         if (offset == 0):
             return T()
-        with (self.TemporarySeek(self, offset, io.SEEK_SET)):
+        with (self.temporary_seek(offset, io.SEEK_SET)):
             return callback(*args)
 
     def load_dict(self, T):
@@ -96,7 +95,7 @@ class ResFileLoader(BinaryReader):
         if (offset == 0):
             return ResDict()
 
-        with self.TemporarySeek(self):
+        with self.temporary_seek(offset, io.SEEK_SET):
             dict = ResDict()
             dict.load(T, self)
             return dict
@@ -106,7 +105,7 @@ class ResFileLoader(BinaryReader):
         offset = offset if offset else self.read_offset()
         if (offset == 0 or count == 0):
             return []
-        with self.TemporarySeek(self, offset):
+        with self.temporary_seek(offset, io.SEEK_SET):
             while count > 0:
                 list_.append(self.__read_res_data(T))
                 count -= 1
@@ -120,7 +119,7 @@ class ResFileLoader(BinaryReader):
         if (offset == 0):
             return None
         # TODO implement string cache
-        with self.TemporarySeek(self, offset, io.SEEK_SET):
+        with self.temporary_seek(offset, io.SEEK_SET):
             return self.read_string(encoding)
 
     def load_strings(self, count, encoding=None):
@@ -128,7 +127,7 @@ class ResFileLoader(BinaryReader):
         """
         offsets = self.read_offsets(count)
         names = [None] * len(offsets)
-        with self.TemporarySeek(self):
+        with self.temporary_seek():
             for i, offset in enumerate(offsets):
                 if (offset == 0):
                     continue
@@ -149,7 +148,7 @@ class ResFileLoader(BinaryReader):
             dict_offs = self.read_offset()
         if (dict_offs == 0):
             return ResDict()
-        with self.TemporarySeek(self, dict_offs, io.SEEK_SET):
+        with self.temporary_seek(dict_offs, io.SEEK_SET):
             dict_ = ResDict()
             dict_.load(T, self)
 
@@ -158,7 +157,7 @@ class ResFileLoader(BinaryReader):
 
             dict_.clear()
             for i in range(len(keys)):
-                dict_.add(keys[i], values[i])
+                dict_.append(keys[i], values[i])
             return dict_
 
     def read_size(self):
@@ -173,13 +172,13 @@ class ResFileLoader(BinaryReader):
         """
         signature = self.read_raw_string(4, 'ascii')
         if (signature != valid_signature):
-            print(f"Invalid signature, expected '{valid_signature}' but got\
-                   '{signature}' at position {self.tell()}.")
+            print(f"Invalid signature, expected '{valid_signature}' but got "
+                  f"'{signature}' at position {self.tell()}.")
 
     def read_offset(self):
         """Reads a BFRES offset which is relative to itself,
         and returns the absolute address."""
-        offset = self.read_uint32
+        offset = self.read_uint32()
         return (0
                 if offset == 0
                 else self.tell() - 4 + offset
@@ -216,7 +215,7 @@ class ResFileLoader(BinaryReader):
 
         existing_instance = self._data_map.get(offset)
         if existing_instance:
-            return T(existing_instance)
+            return existing_instance
         else:
             self._data_map[offset] = instance
             return instance
@@ -236,6 +235,7 @@ def _enable_bit(byte, index):
 
 
 def _encode(byte, value, first_bit, bits):
+    value = int(value)
     mask = (((1 << bits) - 1) << first_bit)
     byte &= ~mask
     value = (value << first_bit) & mask

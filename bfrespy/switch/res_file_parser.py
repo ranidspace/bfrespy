@@ -1,8 +1,10 @@
 import io
-from ..shared import ResFile, ExternalFile
+from bfrespy.res_file import ResFile
+from bfrespy.external_file import ExternalFile
 from .core import ResFileSwitchLoader
-from ..switch.memory_pool import MemoryPool, BufferInfo
-from ..shared.common import ResString, StringTable
+from bfrespy.switch.memory_pool import MemoryPool, BufferInfo
+from bfrespy.common import ResString, StringTable, ResDict
+from bfrespy import models
 
 
 class ResFileParser:
@@ -42,16 +44,16 @@ class ResFileParser:
         if (loader.res_file.version_major2 >= 10):
             # Peek at external flags
             def peek_flags():
-                with (loader.TemporarySeek(loader, 0xee, io.SEEK_SET)):
+                with (loader.temporary_seek(0xee, io.SEEK_SET)):
                     return loader.read_byte()
 
             flags = peek_flags()
             if (res_file.has_flag(flags,
-                                  res_file.ext_flags.holds_external_strings)):
+                                  res_file.ExternalFlags.holds_external_strings)):
                 externalFileOffset = loader.read_offset()
                 externalFileDict = loader.load_dict(ResString)
 
-                '''with (loader.TemporarySeek(externalFileOffset, io.SEEK_SET)):
+                '''with (loader.temporary_seek(externalFileOffset, io.SEEK_SET)):
                     StringCache.Strings.Clear()
                     foreach (var str in externalFileDict.Keys)
                         long stringID = loader.ReadInt64()
@@ -59,10 +61,8 @@ class ResFileParser:
                 return
              # GPU section for TOTK
             if (res_file.has_flag(flags,
-                                  res_file.ext_flags.has_external_gpu)):
-                with (loader.TemporarySeek(loader,
-                                           res_file.siz_file,
-                                           io.SEEK_SET)):
+                                  res_file.ExternalFlags.has_external_gpu)):
+                with (loader.temporary_seek(res_file.siz_file, io.SEEK_SET)):
                     gpuDataOffset = loader.read_uint32()
                     gpuBufferSize = loader.read_uint32()
 
@@ -76,62 +76,64 @@ class ResFileParser:
         res_file.num_model = loader.read_uint16()
 
         # Read models after buffer data
-        res_file.models = loader.load_dict_values(loader,
-                                                  Model,
-                                                  model_dict_offs,
-                                                  model_offs)
-        '''
-        if (loader.ResFile.VersionMajor2 >= 9)
-             #Count for 2 new sections
-            ushort unkCount = loader.read_uint16()
-            ushort unk2Count = loader.read_uint16()
+        res_file.models = loader.load_dict_values(
+            models.Model, model_dict_offs, model_offs)
 
-            if (unkCount != 0) throw new System.Exception("unk1 has section!")
-            if (unk2Count != 0) throw new System.Exception("unk2 has section!")
+        if (loader.res_file.version_major2 >= 9):
+            # Count for 2 new sections
+            unkCount = loader.read_uint16()
+            unk2Count = loader.read_uint16()
 
-        ushort numSkeletalAnim = loader.read_uint16()
-        ushort numMaterialAnim = loader.read_uint16()
-        ushort numBoneVisibilityAnim = loader.read_uint16()
-        ushort numShapeAnim = loader.read_uint16()
-        ushort numSceneAnim = loader.read_uint16()
-        ushort numExternalFile = loader.read_uint16()
-        res_file.ExternalFlag = (ResFile.ExternalFlags)loader.read_byte()
-        byte reserve10 = loader.read_byte()
+            if (unkCount != 0):
+                raise ValueError("unk1 has section!")
+            if (unk2Count != 0):
+                raise ValueError("unk2 has section!")
 
-        uint padding3 = loader.read_uint32()
+        num_skeletal_anim = loader.read_uint16()
+        num_material_anim = loader.read_uint16()
+        num_bone_visibility_anim = loader.read_uint16()
+        num_shape_anim = loader.read_uint16()
+        num_scene_anim = loader.read_uint16()
+        num_external_file = loader.read_uint16()
+        res_file.external_flag = ResFile.ExternalFlags(loader.read_byte())
+        reserve10 = loader.read_byte()
 
-        if (reserve10 == 1 || res_file.ExternalFlag != 0)
-            res_file.DataAlignmentOverride = 0x1000
+        padding3 = loader.read_uint32()
 
-        res_file.Textures = new ResDict<TextureShared>()
-        foreach (var ext in res_file.ExternalFiles) {
-            if (ext.Key.Contains(".bntx"))
-                BntxFile bntx = new BntxFile(new MemoryStream(ext.Value.Data))
+        if (reserve10 == 1 or res_file.external_flag != 0):
+            res_file.data_alignment_override = 0x1000
+
+        # TODO External Files and material animations
+        """res_file.textures = ResDict()
+        for ext in res_file.external_files:
+            if (".bntx" in ext.key):
+                bntx = BntxFile(io.BytesIO(ext.value.data))
                 ext.Value.LoadedFileData = bntx
-                foreach (var tex in bntx.Textures)
-                    res_file.Textures.Add(tex.Name, new SwitchTexture(bntx, tex))
+                for tex in bntx.textures:
+                    res_file.textures.append(
+                        tex.Name, SwitchTexture(bntx, tex))
 
-        res_file.TexPatternAnims = new ResDict<MaterialAnim>()
-        res_file.MatVisibilityAnims = new ResDict<MaterialAnim>()
-        res_file.ShaderParamAnims = new ResDict<MaterialAnim>()
-        res_file.ColorAnims = new ResDict<MaterialAnim>()
-        res_file.TexSrtAnims = new ResDict<MaterialAnim>()
+        res_file.tex_pattern_anims = ResDict(MaterialAnim)
+        res_file.mat_visibility_anims = ResDict(MaterialAnim)
+        res_file.shader_param_anims = ResDict(MaterialAnim)
+        res_file.color_anims = ResDict(MaterialAnim)
+        res_file.tex_srt_anims = ResDict(MaterialAnim)
 
-         #Split material animations into shader, texture, and visual animation lists
-        foreach (var anim in res_file.MaterialAnims.Values)
-            if (anim.Name.Contains("_ftp"))
-                res_file.TexPatternAnims.Add(anim.Name, anim)
-            else if(anim.Name.Contains("_fts"))
-                res_file.ShaderParamAnims.Add(anim.Name, anim)
-            else if (anim.Name.Contains("_fcl"))
-                res_file.ColorAnims.Add(anim.Name, anim)
-            else if (anim.Name.Contains("_fst"))
-                res_file.TexSrtAnims.Add(anim.Name, anim)
-            else if (anim.Name.Contains("_fvt"))
-                res_file.MatVisibilityAnims.Add(anim.Name, anim)
-            else if (anim.MaterialAnimDataList != null && anim.MaterialAnimDataList.Any(x => x.VisibilyCount > 0))
-                res_file.MatVisibilityAnims.Add(anim.Name, anim)
-            else if (anim.MaterialAnimDataList != null && anim.MaterialAnimDataList.Any(x => x.TexturePatternCount > 0))
-                res_file.TexPatternAnims.Add(anim.Name, anim)
-            else
-                res_file.ShaderParamAnims.Add(anim.Name, anim)'''
+        # Split material animations into shader, texture, and visual animation lists
+        for anim in res_file.material_anims.values:
+            if (anim.name.contains("_ftp")):
+                res_file.tex_pattern_anims.append(anim.name, anim)
+            elif (anim.name.contains("_fts")):
+                res_file.shader_param_anims.append(anim.name, anim)
+            elif (anim.name.contains("_fcl")):
+                res_file.color_anims.append(anim.name, anim)
+            elif (anim.name.contains("_fst")):
+                res_file.tex_srt_anims.append(anim.name, anim)
+            elif (anim.name.contains("_fvt")):
+                res_file.mat_visibility_anims.append(anim.name, anim)
+            elif (anim.material_anim_data_list != None and anim.material_anim_data_list.any(x= > x.visibily_count > 0)):
+                res_file.mat_visibility_anims.append(anim.name, anim)
+            elif (anim.material_anim_data_list != None and anim.material_anim_data_list.any(x= > x.texture_pattern_count > 0)):
+                res_file.tex_pattern_anims.append(anim.name, anim)
+            else:
+                res_file.shader_param_anims.append(anim.name, anim)"""

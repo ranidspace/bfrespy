@@ -1,5 +1,5 @@
-from .core import IResData, ResFileLoader
 from enum import IntFlag
+from .core import IResData, ResFileLoader
 
 
 class BoneAnimData:

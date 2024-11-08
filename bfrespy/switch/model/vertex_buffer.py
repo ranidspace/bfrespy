@@ -1,9 +1,10 @@
 import io
-from ...shared.core import IResData
+from bfrespy.core import IResData
 from ..memory_pool import MemoryPool, BufferInfo
 from ..core import ResFileSwitchLoader
-from ...shared.models import *
-from ...shared.common import UserData, Buffer
+from bfrespy.models import *
+from bfrespy.common import UserData, Buffer
+import bfrespy.binary_io
 
 
 class VertexBufferStride(IResData):
@@ -21,7 +22,7 @@ class VertexBufferSize(IResData):
         self.gpu_access_flags: int
 
     def load(self, loader: ResFileSwitchLoader):
-        size = loader.read_uint32()
+        self.size = loader.read_uint32()
         self.gpu_access_flags = loader.read_uint32()
         loader.seek(8)
 
@@ -37,7 +38,8 @@ class VertexBufferParser:
         vtx_buffer.attributes = loader.load_dict_values(VertexAttrib)
         vtx_buffer.mempool = loader.load(MemoryPool)
         unk = loader.read_offset()
-        if (loader.res_file.version_major2 > 2 or loader.res_file.version_major > 0):
+        if (loader.res_file.version_major2 > 2
+                or loader.res_file.version_major > 0):
             loader.read_offset()  # unk2
         vtx_buff_size_offs = loader.read_offset()
         vtx_stride_size_offs = loader.read_offset()
@@ -51,8 +53,12 @@ class VertexBufferParser:
         vtx_buffer.gpu_buff_align = loader.read_uint16()
 
         # Buffers use the index buffer offset from memory info section
-        # This goes to a section in the memory pool which stores all the buffer data, including faces
-        # To obtain a list of all the buffer data, it would be by the index buffer offset + buff_offs
+        #
+        # This goes to a section in the memory pool which stores all the
+        # buffer data, including faces
+        #
+        # To obtain a list of all the buffer data, it would be by the
+        # index buffer offset + buff_offs
 
         stride_array = loader.load_list(
             VertexBufferStride, num_buffer, vtx_stride_size_offs
@@ -62,14 +68,14 @@ class VertexBufferParser:
         )
 
         vtx_buffer.buffers = []
-        with (loader.TemporarySeek(BufferInfo.buff_offs + buff_offs, io.SEEK_SET)):
+        with (loader.temporary_seek(BufferInfo.buff_offs + buff_offs, io.SEEK_SET)):
             for buff in range(num_buffer):
                 buffer = Buffer()
-                buffer.data = []
+                buffer.data = [[]]
                 buffer.stride = stride_array[buff].stride
 
                 loader.align(8)
                 buffer.data[0] = loader.read_bytes(
-                    int(vtx_buff_size_array[buff].size)
+                    vtx_buff_size_array[buff].size
                 )
                 vtx_buffer.buffers.append(buffer)

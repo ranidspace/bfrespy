@@ -26,6 +26,13 @@ class BinaryReader:
             print("nothing happened")
             return
 
+    def temporary_seek(self, offset=None, origin=None):
+        if offset == None:
+            offset = 0
+        if origin == None:
+            origin = io.SEEK_CUR
+        return NewSeek(self, offset, origin)
+
     def align(self, alignment):
         self.seek(-self.tell() % alignment, io.SEEK_CUR)
 
@@ -100,7 +107,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'q',
                              self.stream.read(8))[0]
 
-    def read_uint64s(self, count) -> int:
+    def read_int64s(self, count) -> int:
         return struct.unpack(self.endianness + str(int(count)) + 'q',
                              self.stream.read(8 * count))
 
@@ -135,7 +142,7 @@ class BinaryReader:
         return self.stream.read(length).decode(encoding)
 
     def read_matrix_3x4(self):
-        return numpy.reshape(self.read_singles(12))
+        return numpy.reshape(self.read_singles(12), (3, 4))
 
     def read_matrix_3x4s(self, count):
         values = []
@@ -152,24 +159,36 @@ class BinaryReader:
     def read_vector4f(self):
         return tuple(self.read_singles(4))
 
-    class TemporarySeek:
-        """Temporarily move the pointer to a different location and return it
-        to the correct position when it's closed
-        """
-        # XXX There's gotta be a way to do this without having to pass the reader in
+    def read_bounding(self):
+        """Reads a Bounding instance from the current stream and returns it."""
+        from bfrespy.models import Bounding
+        return Bounding(self.read_vector3f(), self.read_vector3f())
 
-        def __init__(self, reader, offset=None, whence=io.SEEK_SET):
-            self.offset = offset
-            self.whence = whence
-            self.reader = reader
-            self.curoff = reader.tell()
+    def read_boundings(self, count):
+        """Reads Bounding instances from the current stream and returns them."""
+        values = []
+        for i in range(count):
+            values.append(self.read_bounding())
+        return values
 
-        def __enter__(self):
-            if self.offset != None:
-                self.reader.seek(self.offset, self.whence)
 
-        def __exit__(self, exc_type, exc_value, exc_traceback):
-            self.reader.seek(self.curoff, io.SEEK_SET)
+class NewSeek:
+    """Temporarily move the pointer to a different location and return it
+    to the correct position when it's closed
+    """
+
+    def __init__(self, reader: BinaryReader, offset, whence):
+        self.offset = offset
+        self.whence = whence
+        self.reader = reader
+        self.prev_pos = reader.tell()
+
+    def __enter__(self):
+        if self.offset != None:
+            self.reader.seek(self.offset, self.whence)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self.reader.seek(self.prev_pos, io.SEEK_SET)
 
 
 class BinaryWriter:

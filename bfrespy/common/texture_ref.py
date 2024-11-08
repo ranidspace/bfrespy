@@ -1,13 +1,12 @@
-from .. import core
-from ... import WiiU
-from ...shared import TextureShared
+from bfrespy import core
+from bfrespy.texture import TextureShared
 
 
 class TextureRef(core.IResData):
-    def __init__(self):
+    def __init__(self, name=""):
         self.texture: TextureShared
 
-        self.name = ""
+        self.name = name
 
     def load(self, loader: core.ResFileLoader):
         name = loader.load_string()

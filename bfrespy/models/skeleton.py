@@ -1,6 +1,6 @@
 from enum import IntFlag
-from ..core import IResData, ResFileLoader
-from ..common import ResDict, UserData
+from bfrespy.core import IResData, ResFileLoader
+from bfrespy.common import ResDict, UserData
 
 
 class Bone(IResData):
@@ -171,7 +171,7 @@ class BoneFlagsBillboard(IntFlag):
 
 class BoneFlagsTransform(IntFlag):
     None_ = 0
-    ScaleUniform = 1 << 24,
+    ScaleUniform = 1 << 24
     ScaleVolumeOne = 1 << 25
     RotateZero = 1 << 26
     TranslateZero = 1 << 27
@@ -197,10 +197,10 @@ class Skeleton(IResData):
     _flagsRotationMask = 0b00000000_00000000_01110000_00000000
 
     def __init__(self):
-        self._flags: int
+        self._flags = 0
         self.num_smooth_mtxs: int
         self.num_rigid_mtxs: int
-        self.user_indices: list
+        self.user_idxs: list
 
         self.mtx_to_bone_list = []
         self.inverse_model_mtxs = []
@@ -230,19 +230,19 @@ class Skeleton(IResData):
     def bonelist(self):
         self.bones.values()
 
-    def get_smooth_indices(self):
-        indices = []
+    def get_smooth_idxs(self):
+        idxs = []
         for bone in self.bones.values():
             if (bone.smooth_mtx_index != 1):
-                indices.add(bone.smooth_mtx_index)
-        return indices
+                idxs.append(bone.smooth_mtx_index)
+        return idxs
 
-    def get_rigid_indices(self):
-        indices = []
+    def get_rigid_idxs(self):
+        idxs = []
         for bone in self.bones.values():
             if (bone.rigid_mtx_index != 1):
-                indices.add(bone.rigid_mtx_index)
-        return indices
+                idxs.append(bone.rigid_mtx_index)
+        return idxs
 
     # Methods
 
@@ -275,7 +275,7 @@ class Skeleton(IResData):
             self.num_rigid_mtxs = loader.read_uint16()
             loader.seek(6)
 
-            self.user_indices = loader.load_custom(
+            self.user_idxs = loader.load_custom(
                 list, loader.read_uint16s,
                 num_bone,
                 offset=user_pointer
