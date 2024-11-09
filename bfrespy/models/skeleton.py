@@ -6,13 +6,13 @@ from ..common import ResDict, UserData
 class Bone(IResData):
 
     def __init__(self):
-        self._flags: int
+        _flags = 0
         self.name = ""
         self.userdata = ResDict()
-        self.parent_index = -1
-        self.smooth_mtx_index = -1
-        self.rigid_mtx_index = -1
-        self.billboard_index = -1
+        self.parent_idx = -1
+        self.smooth_mtx_idx = -1
+        self.rigid_mtx_idx = -1
+        self.billboard_idx = -1
 
         self.scale = (1, 1, 1)
         self.rotation = (0, 0, 0, 0)
@@ -101,23 +101,23 @@ class Bone(IResData):
                     or loader.res_file.version_major2 == 9):
                 loader.seek(16)
 
-            idx = loader.read_uint16()
-            self.parent_index = loader.read_uint16()
-            self.smooth_mtx_index = loader.read_uint16()
-            self.rigid_mtx_index = loader.read_uint16()
-            self.billboard_index = loader.read_uint16()
+            idx = loader.read_int16()
+            self.parent_idx = loader.read_int16()
+            self.smooth_mtx_idx = loader.read_int16()
+            self.rigid_mtx_idx = loader.read_int16()
+            self.billboard_idx = loader.read_int16()
             num_user_data = loader.read_uint16()
-            _flags = loader.read_uint32()
+            self._flags = loader.read_uint32()
             self.scale = loader.read_vector3f()
             self.rotation = loader.read_vector4f()
             self.position = loader.read_vector3f()
         else:
             self.name = loader.load_string()
             idx = loader.read_uint16()
-            self.parent_index = loader.read_uint16()
-            self.smooth_mtx_index = loader.read_uint16()
-            self.rigid_mtx_index = loader.read_uint16()
-            self.billboard_index = loader.read_uint16()
+            self.parent_idx = loader.read_int16()
+            self.smooth_mtx_idx = loader.read_int16()
+            self.rigid_mtx_idx = loader.read_int16()
+            self.billboard_idx = loader.read_int16()
             num_user_data = loader.read_uint16()
             _flags = loader.read_uint32()
             self.scale = loader.read_vector3f()
@@ -233,15 +233,15 @@ class Skeleton(IResData):
     def get_smooth_idxs(self):
         idxs = []
         for bone in self.bones.values():
-            if (bone.smooth_mtx_index != 1):
-                idxs.append(bone.smooth_mtx_index)
+            if (bone.smooth_mtx_idx != 1):
+                idxs.append(bone.smooth_mtx_idx)
         return idxs
 
     def get_rigid_idxs(self):
         idxs = []
         for bone in self.bones.values():
-            if (bone.rigid_mtx_index != 1):
-                idxs.append(bone.rigid_mtx_index)
+            if (bone.rigid_mtx_idx != 1):
+                idxs.append(bone.rigid_mtx_idx)
         return idxs
 
     # Methods

@@ -33,7 +33,7 @@ class VertexAttrib(IResData):
 
     def __init__(self):
         self.name = ""
-        self.buffer_index = 0
+        self.buffer_idx = 0
         self.offset = 0
         self.format_ = GX2AttribFormat.Format_32_32_32_32_Single
 
@@ -46,7 +46,7 @@ class VertexAttrib(IResData):
             loader.endianness = '<'
             loader.seek(2)
             self.offset = loader.read_uint16()
-            self.buffer_index = loader.read_uint16()
+            self.buffer_idx = loader.read_uint16()
 
     def __convert_to_gx2(self, att: IntEnum):
         return GX2AttribFormat[att.name]

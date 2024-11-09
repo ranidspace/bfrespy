@@ -27,9 +27,9 @@ class RelocationTable(IResData):
                 region_offs = entry.region_offs
                 offset_count = entry.reloc_count
                 offset_mask = offset_count & 3
-                for array_index in range(entry.array_count):
+                for array_idx in range(entry.array_count):
                     region_offset_iter = region_offs
-                    for offset_index in range(offset_count):
+                    for offset_idx in range(offset_count):
                         reloc_pointer = (file_base + region_offset_iter
                                          if region_offset_iter != 0
                                          else 0)
@@ -44,8 +44,8 @@ class RelocationTable(IResData):
     def get_base_entry_offs(self, idx):
         return self.this_table_offs + 0x10 + 0x18 * self.section_count + idx * 0x8
 
-    def get_section(self, section_index):
-        return self.this_table_offs + 0x10 + section_index * 0x18
+    def get_section(self, section_idx):
+        return self.this_table_offs + 0x10 + section_idx * 0x18
 
     class ResSection(IResData):
         def __init__(self):
