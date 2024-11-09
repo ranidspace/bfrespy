@@ -1,5 +1,5 @@
-from bfrespy import core
-from bfrespy.texture import TextureShared
+from .. import core
+from ..texture import TextureShared
 
 
 class TextureRef(core.IResData):

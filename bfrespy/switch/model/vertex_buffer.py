@@ -1,10 +1,9 @@
 import io
-from bfrespy.core import IResData
+from ...core import IResData
 from ..memory_pool import MemoryPool, BufferInfo
-from ..core import ResFileSwitchLoader
-from bfrespy.models import *
-from bfrespy.common import UserData, Buffer
-import bfrespy.binary_io
+from ..switchcore import ResFileSwitchLoader
+from ...models import *
+from ...common import UserData, Buffer
 
 
 class VertexBufferStride(IResData):

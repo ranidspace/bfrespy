@@ -1,7 +1,6 @@
 import io
-from ..core import ResFileSwitchLoader
-from bfrespy.models import Shape, ShapeFlags, Mesh, VertexBuffer, KeyShape
-import bfrespy.binary_io
+from ..switchcore import ResFileSwitchLoader
+from ...models import Shape, ShapeFlags, Mesh, VertexBuffer, KeyShape
 
 
 class ShapeParser:

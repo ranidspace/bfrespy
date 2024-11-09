@@ -1,10 +1,10 @@
 from enum import IntEnum
-import bfrespy.core
-from bfrespy.models import TexSampler
-from bfrespy import gx2
+from ... import core
+from ...models import TexSampler
+from ... import gx2
 
 
-class SamplerSwitch(bfrespy.core.IResData):
+class SamplerSwitch(core.IResData):
     __FLAGS_SHRINK_MASK = 0b00000000_00110000
     __FLAGS_EXPAND_MASK = 0b00000000_00001100
     __FLAGS_MIPMAP_MASK = 0b00000000_00000011
@@ -88,7 +88,7 @@ class SamplerSwitch(bfrespy.core.IResData):
 
         return sampler
 
-    def load(self, loader: bfrespy.core.ResFileLoader):
+    def load(self, loader: core.ResFileLoader):
         self.wrapmode_u = self.TexClamp(loader.read_byte())
         self.wrapmode_v = self.TexClamp(loader.read_byte())
         self.wrapmode_w = self.TexClamp(loader.read_byte())

@@ -1,9 +1,9 @@
 import math
 from enum import IntEnum, auto
 
-from bfrespy import core, gx2
-from bfrespy.common import (ResDict, ResString, TextureRef, UserData,
-                            Srt2D, Srt3D, TexSrt, TexSrtMode)
+from .. import core, gx2
+from ..common import (ResDict, ResString, TextureRef, UserData,
+                      Srt2D, Srt3D, TexSrt, TexSrtMode)
 
 
 class Material(core.IResData):
@@ -55,7 +55,7 @@ class Material(core.IResData):
     def load(self, loader: core.ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from bfrespy.switch.model import MaterialParser
+            from ..switch.model import MaterialParser
             MaterialParser.load(loader, self)
         else:
             self.name = loader.load_string()
@@ -94,7 +94,7 @@ class Material(core.IResData):
             return
         # XXX this could be done with just a temporary reader and relocation?
         import io
-        from bfrespy.binary_io import BinaryReader
+        from ..binary_io import BinaryReader
         with BinaryReader(io.BytesIO(data)) as reader:
             reader.endianness = endianness
             for param in self.shader_params.values():
@@ -505,7 +505,7 @@ class Sampler(core.IResData):
 
     def load(self, loader: core.ResFileLoader):
         if (loader.is_switch):
-            from bfrespy.switch import model
+            from ..switch import model
             sampler = model.SamplerSwitch()
             sampler.load(loader)
             self.tex_sampler = sampler.to_tex_sampler()

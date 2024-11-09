@@ -1,4 +1,4 @@
-from bfrespy.core import ResFileLoader, IResData
+from ..core import ResFileLoader, IResData
 from .res_string import ResString
 from abc import abstractmethod
 

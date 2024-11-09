@@ -22,7 +22,7 @@ class ResFile(IResData):
         self.is_platform_switch: bool
 
         if (self.is_switch_binary(stream)):
-            from bfrespy.switch.core import ResFileSwitchLoader
+            from .switch.switchcore import ResFileSwitchLoader
 
             with ResFileSwitchLoader(self, stream) as loader:
                 loader.execute()
@@ -87,5 +87,5 @@ class ResFile(IResData):
     def load(self, loader):
         self.is_platform_switch = loader.is_switch
         if (loader.is_switch):
-            from bfrespy import switch
+            from . import switch
             switch.ResFileParser.load(loader, self)

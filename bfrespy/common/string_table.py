@@ -1,5 +1,5 @@
 import io
-from bfrespy.core import IResData, ResFileLoader
+from ..core import IResData, ResFileLoader
 
 
 class StringTable(IResData):

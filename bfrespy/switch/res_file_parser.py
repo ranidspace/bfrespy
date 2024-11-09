@@ -1,10 +1,10 @@
 import io
-from bfrespy.res_file import ResFile
-from bfrespy.external_file import ExternalFile
-from .core import ResFileSwitchLoader
-from bfrespy.switch.memory_pool import MemoryPool, BufferInfo
-from bfrespy.common import ResString, StringTable, ResDict
-from bfrespy import models
+from ..res_file import ResFile
+from ..external_file import ExternalFile
+from .switchcore import ResFileSwitchLoader
+from .memory_pool import MemoryPool, BufferInfo
+from ..common import ResString, StringTable, ResDict
+from .. import models
 
 
 class ResFileParser:

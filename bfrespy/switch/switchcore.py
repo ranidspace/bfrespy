@@ -1,6 +1,6 @@
 import io
-from bfrespy.core import ResFileLoader, IResData
-from bfrespy import ResFile
+from ..core import ResFileLoader, IResData
+from .. import ResFile
 
 
 class ResFileSwitchLoader(ResFileLoader):

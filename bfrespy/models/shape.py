@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from enum import IntFlag, IntEnum
 
-from bfrespy.core import IResData, ResFileLoader
-from bfrespy.common import ResDict, Buffer
-from bfrespy.gx2 import GX2PrimitiveType, GX2IndexFormat
-from bfrespy.switch.memory_pool import MemoryPool, BufferSize, BufferInfo
+from ..core import IResData, ResFileLoader
+from ..common import ResDict, Buffer
+from ..gx2 import GX2PrimitiveType, GX2IndexFormat
+from ..switch.memory_pool import MemoryPool, BufferSize, BufferInfo
 from . import VertexBuffer
 
 
@@ -54,7 +54,7 @@ class Shape(IResData):
     def load(self, loader: ResFileLoader):
         loader.check_signature(self._signature)
         if (loader.is_switch):
-            from bfrespy.switch.model import ShapeParser
+            from ..switch.model import ShapeParser
             ShapeParser.read(loader, self)
 
 

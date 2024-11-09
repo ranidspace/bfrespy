@@ -161,7 +161,7 @@ class BinaryReader:
 
     def read_bounding(self):
         """Reads a Bounding instance from the current stream and returns it."""
-        from bfrespy.models import Bounding
+        from .models import Bounding
         return Bounding(self.read_vector3f(), self.read_vector3f())
 
     def read_boundings(self, count):

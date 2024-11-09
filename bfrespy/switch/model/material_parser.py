@@ -1,9 +1,7 @@
 import io
-from bfrespy.switch.core import ResFileSwitchLoader
-from bfrespy import core
-from bfrespy import models
-from bfrespy.common import ResDict, ResString, UserData
-import bfrespy.binary_io
+from ..switchcore import ResFileSwitchLoader
+from ... import core, models
+from ...common import ResDict, ResString, UserData
 
 
 class MaterialParser:

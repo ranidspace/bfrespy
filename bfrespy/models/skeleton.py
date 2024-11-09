@@ -1,6 +1,6 @@
 from enum import IntFlag
-from bfrespy.core import IResData, ResFileLoader
-from bfrespy.common import ResDict, UserData
+from ..core import IResData, ResFileLoader
+from ..common import ResDict, UserData
 
 
 class Bone(IResData):

@@ -1,6 +1,6 @@
-from bfrespy.switch.core import ResFileSwitchLoader
-from bfrespy.models import Model, Shape, Skeleton, Material, VertexBuffer
-from bfrespy.common import UserData, Buffer
+from ..switchcore import ResFileSwitchLoader
+from ...models import Model, Shape, Skeleton, Material, VertexBuffer
+from ...common import UserData, Buffer
 
 
 class ModelParser:
@@ -33,7 +33,7 @@ class ModelParser:
             if (loader.res_file.version_major2 >= 10):
                 loader.read_offset()  # Shader assign offset
 
-        model.UserData = loader.load_dict_values(UserData)
+        model.userdata = loader.load_dict_values(UserData)
         user_pointer = loader.read_offset()
         num_vtx_buff = loader.read_uint16()
         num_shape = loader.read_uint16()
@@ -50,6 +50,6 @@ class ModelParser:
             total_vtx_count = loader.read_uint32()
             padding = loader.read_uint32()
 
-        model.VertexBuffers = loader.load_list(
+        model.vtx_buffers = loader.load_list(
             VertexBuffer, num_vtx_buff, int(vtx_array_offs)
         )
