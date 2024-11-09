@@ -160,6 +160,11 @@ class ResFileLoader(BinaryReader):
                 dict_.append(keys[i], values[i])
             return dict_
 
+    def load_relocation_table(self, offset):
+        from .rlt import RelocationTable
+        with self.temporary_seek(offset, io.SEEK_SET):
+            self.relocation_table = self.__read_res_data(RelocationTable)
+
     def read_size(self):
         return self.read_uint32()
 

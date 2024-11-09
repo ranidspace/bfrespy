@@ -9,6 +9,7 @@ from bfrespy import models
 
 class ResFileParser:
     def load(loader: ResFileSwitchLoader, res_file: ResFile):
+        # File Header
         loader.check_signature("FRES")
         padding = loader.read_uint32()
         res_file.version = loader.read_uint32()
@@ -22,6 +23,10 @@ class ResFileParser:
         res_file.block_offs = loader.read_uint16()
         relocation_table_offs = loader.read_uint32()
         siz_file = loader.read_uint32()
+
+        loader.load_relocation_table(relocation_table_offs)
+
+        # Bfres Header
         res_file.name = loader.load_string()
         model_offs = loader.read_offset()
         model_dict_offs = loader.read_offset()
