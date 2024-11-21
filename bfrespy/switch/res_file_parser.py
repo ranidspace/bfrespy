@@ -8,7 +8,8 @@ from .. import models
 
 
 class ResFileParser:
-    def load(loader: ResFileSwitchLoader, res_file: ResFile):
+    @staticmethod
+    def load(loader: 'ResFileSwitchLoader', res_file: 'ResFile'):
         # File Header
         loader.check_signature("FRES")
         padding = loader.read_uint32()
@@ -24,7 +25,7 @@ class ResFileParser:
         relocation_table_offs = loader.read_uint32()
         siz_file = loader.read_uint32()
 
-        loader.load_relocation_table(relocation_table_offs)
+        # loader.load_relocation_table(relocation_table_offs)
 
         # Bfres Header
         res_file.name = loader.load_string()
@@ -32,6 +33,7 @@ class ResFileParser:
         model_dict_offs = loader.read_offset()
         if (loader.res_file.version_major2 >= 9):
             loader.read_bytes(32)  # reserved
+            
         # TODO Read These properly
         res_file.skeletal_anims = loader.read_offset()
         res_file.skeletal_anims = loader.read_offset()
@@ -43,6 +45,7 @@ class ResFileParser:
         res_file.shape_anims = loader.read_offset()
         res_file.scene_anims = loader.read_offset()
         res_file.scene_anims = loader.read_offset()
+
         res_file.mempool = loader.load(MemoryPool)
         res_file.buffer_info = loader.load(BufferInfo)
 
@@ -67,18 +70,18 @@ class ResFileParser:
              # GPU section for TOTK
             if (res_file.has_flag(flags,
                                   res_file.ExternalFlags.has_external_gpu)):
-                with (loader.temporary_seek(res_file.siz_file, io.SEEK_SET)):
+                with (loader.temporary_seek(siz_file, io.SEEK_SET)):
                     gpuDataOffset = loader.read_uint32()
                     gpuBufferSize = loader.read_uint32()
 
                     res_file.buffer_info = BufferInfo()
-                    res_file.buffer_info.bufffer_offs = siz_file + 288
+                    res_file.buffer_info.buff_offs = siz_file + 288
 
         res_file.external_files = loader.load_dict_values(ExternalFile)
         padding1 = loader.read_uint64()
         res_file.string_table = loader.load(StringTable)
-        res_file.string_pool_size = loader.read_uint32()
-        res_file.num_model = loader.read_uint16()
+        string_pool_size = loader.read_uint32()
+        num_model = loader.read_uint16()
 
         # Read models after buffer data
         res_file.models = loader.load_dict_values(
@@ -114,7 +117,7 @@ class ResFileParser:
             if (".bntx" in ext.key):
                 bntx = BntxFile(io.BytesIO(ext.value.data))
                 ext.Value.LoadedFileData = bntx
-                for tex in bntx.textures:
+                for tex in bntx.nx.textures:
                     res_file.textures.append(
                         tex.Name, SwitchTexture(bntx, tex))
 

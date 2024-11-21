@@ -10,21 +10,21 @@ class TexSrtMode(IntEnum):
 
 @dataclass
 class Srt2D:
-    scaling: tuple[float]
-    rotation: tuple[float]
-    translation: tuple[float]
+    scaling: tuple[float, float]
+    rotation: float
+    translation: tuple[float, float]
 
 
 @dataclass
 class Srt3D:
-    scaling: tuple[float]
-    rotation: tuple[float]
-    translation: tuple[float]
+    scaling: tuple[float, float, float]
+    rotation: tuple[float, float, float]
+    translation: tuple[float, float, float]
 
 
 @dataclass
 class TexSrt:
     mode: TexSrtMode
-    scaling: tuple[float]
-    rotation: tuple[float]
-    translation: tuple[float]
+    scaling: tuple[float, float]
+    rotation: float
+    translation: tuple[float, float]

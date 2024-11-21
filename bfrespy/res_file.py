@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import struct
 from enum import IntFlag
@@ -7,19 +9,43 @@ from .core import IResData
 class ResFile(IResData):
     """Represents a NintendoWare for Cafe (NW4F) graphics data archive file."""
 
-    def __init__(self, stream: io.BufferedReader):
+    class ExternalFlags(IntFlag):
+        is_external_model_uninitalized = 1 << 0
+        has_external_string = 1 << 1
+        holds_external_strings = 1 << 2
+        has_external_gpu = 1 << 3
+
+        mesh_codec_resave = 1 << 7
+
+    def __init__(self, stream: io.BytesIO | io.BufferedReader):
         """Initializes a new instance of the ResFile class from a stream"""
+        self.external_flag: ResFile.ExternalFlags
+
+        self.is_platform_switch: bool
+
+        self.alignment = 0xC
+        self.data_alignment_override = 0
+        self.target_addr_size: int
+        self.name: str
         self.version: int
+        self.flags: int
+        self.block_offs: int
+        self.mempool: 'MemoryPool'
+        self.buffer_info: 'BufferInfo'
+        self.string_table: 'StringTable'
+        self.material_anims: 'ResDict[MaterialAnim]'
         self.version_major: int
         self.version_major2: int
         self.version_minor: int
         self.version_minor2: int
-        self.external_flag: self.ExternalFlags
-
-        self.alignment = 0xC
-        self.data_alignment_override = 0
-
-        self.is_platform_switch: bool
+        self.endianness: str
+        self.models: 'ResDict[Model]'
+        self.textures: 'ResDict[TextureShared]'
+        self.skeletal_anims: 'ResDict[SkeletalAnim]'
+        self.shape_anims: 'ResDict[ShapeAnim]'
+        self.bone_visibility_anims: 'ResDict[VisibilityAnim]'
+        self.scene_anims: 'ResDict[SceneAnims]'
+        self.external_files: 'ResDict[ExternalFile]'
 
         if (self.is_switch_binary(stream)):
             from .switch.switchcore import ResFileSwitchLoader
@@ -68,16 +94,6 @@ class ResFile(IResData):
         self.version_major2 = version >> 16 & 0xFF
         self.version_minor = version >> 8 & 0xFF
         self.version_minor2 = version & 0xFF
-
-    # Enums
-
-    class ExternalFlags(IntFlag):
-        is_external_model_uninitalized = 1 << 0
-        has_external_string = 1 << 1
-        holds_external_strings = 1 << 2
-        has_external_gpu = 1 << 3
-
-        mesh_codec_resave = 1 << 7
 
     def has_flag(self, value, flag):
         return value & flag == flag

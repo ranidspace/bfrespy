@@ -7,13 +7,13 @@ import numpy
 class BinaryReader:
     """A wrapper to read binary data as other formats"""
 
-    def __init__(self, stream: io.BufferedReader, leave_open=False):
-        self.endianness: bool
+    def __init__(self, stream: io.BytesIO | io.BufferedReader, leave_open=False):
+        self.endianness: str
         self.leave_open = leave_open
         self.stream = stream
 
         if (type(stream) == bytes):
-            stream = io.BufferedReader(io.BytesIO(stream))
+            stream = io.BytesIO(stream)
             return super().__init__(stream)
 
     def __enter__(self):
@@ -65,7 +65,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'H',
                              self.stream.read(2))[0]
 
-    def read_uint16s(self, count) -> list[int]:
+    def read_uint16s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'H',
                              self.stream.read(2 * count))
 
@@ -73,7 +73,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'I',
                              self.stream.read(4))[0]
 
-    def read_uint32s(self, count) -> list[int]:
+    def read_uint32s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'I',
                              self.stream.read(4 * count))
 
@@ -81,7 +81,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'Q',
                              self.stream.read(8))[0]
 
-    def read_uint64s(self, count) -> int:
+    def read_uint64s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'Q',
                              self.stream.read(8 * count))
 
@@ -91,7 +91,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'h',
                              self.stream.read(2))[0]
 
-    def read_int16s(self, count) -> list[int]:
+    def read_int16s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'h',
                              self.stream.read(2 * count))
 
@@ -99,7 +99,7 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'i',
                              self.stream.read(4))[0]
 
-    def read_int32s(self, count) -> list[int]:
+    def read_int32s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'i',
                              self.stream.read(4 * count))
 
@@ -107,57 +107,60 @@ class BinaryReader:
         return struct.unpack(self.endianness + 'q',
                              self.stream.read(8))[0]
 
-    def read_int64s(self, count) -> int:
+    def read_int64s(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'q',
                              self.stream.read(8 * count))
 
-    def read_sbyte(self):
+    def read_sbyte(self) -> int:
         return struct.unpack(self.endianness + 'b',
                              self.stream.read(1))[0]
 
-    def read_sbytes(self, count):
+    def read_sbytes(self, count) -> tuple[int, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'b',
                              self.stream.read(1 * count))
 
     # Other Formats
 
     def read_bool(self) -> bool:
-        return struct.unpack(self.endianness + '?',
-                             self.stream.read(1)[0])
+        return bool(struct.unpack(self.endianness + '?',
+                                  self.stream.read(1))[0])
 
-    def read_bools(self, count) -> list[bool]:
+    def read_bools(self, count) -> tuple[bool, ...]:
         return struct.unpack(self.endianness + str(int(count)) + '?',
-                             self.stream.read(1)[0])
+                             self.stream.read(count))
 
     def read_single(self) -> float:
         return struct.unpack(self.endianness + 'f',
                              self.stream.read(4))[0]
 
-    def read_singles(self, count) -> list[float]:
+    def read_singles(self, count) -> tuple[float, ...]:
         return struct.unpack(self.endianness + str(int(count)) + 'f',
                              self.stream.read(4 * count))
 
-    def read_raw_string(self, length, encoding=None):
+    def read_raw_string(self, length, encoding=None) -> str:
         encoding = encoding if encoding != None else 'utf-8'
         return self.stream.read(length).decode(encoding)
 
-    def read_matrix_3x4(self):
+    def read_matrix_3x4(self) -> numpy.ndarray:
         return numpy.reshape(self.read_singles(12), (3, 4))
 
-    def read_matrix_3x4s(self, count):
+    def read_matrix_3x4s(self, count) -> list[numpy.ndarray]:
         values = []
         for i in range(count):
             values.append(self.read_matrix_3x4())
         return values
 
-    def read_vector2f(self):
-        return tuple(self.read_singles(2))
+    # Type hinting is mostly just for fun but this genuinely bothered me that
+    # you couldnt add set lengths, you have to just write it a bunch of times.
+    def read_vector2f(self) -> tuple[float, float]:
+        return (self.read_single(), self.read_single())
 
-    def read_vector3f(self):
-        return tuple(self.read_singles(3))
+    def read_vector3f(self) -> tuple[float, float, float]:
+        return (self.read_single(), self.read_single(), self.read_single())
 
-    def read_vector4f(self):
-        return tuple(self.read_singles(4))
+    def read_vector4f(self) -> tuple[float, float, float, float]:
+        return (self.read_single(), self.read_single(),
+                self.read_single(), self.read_single())
 
     def read_bounding(self):
         """Reads a Bounding instance from the current stream and returns it."""

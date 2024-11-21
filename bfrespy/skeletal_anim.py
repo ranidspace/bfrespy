@@ -49,7 +49,7 @@ class BoneAnimsFlagCurve(IntFlag):
     TranslateZ = 1 << 15
 
 
-class BoneAnimsFlagCurve(IntFlag):
+class BoneAnimFlagsTransform(IntFlag):
     SegmentScaleCompensate = 1 << 23
     ScaleUniform = 1 << 24
     ScaleVolumeOne = 1 << 25

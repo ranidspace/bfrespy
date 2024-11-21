@@ -27,9 +27,9 @@ class UserData(IResData):
 
                 reserved = loader.read_raw_string(8)
                 count = loader.read_uint32()
-                self.type = loader.read_uint32()
+                self.type = UserDataType(loader.read_uint32())
             else:
-                count - loader.read_uint32()
+                count = loader.read_uint32()
                 self.type = UserDataType(loader.read_byte())
                 reserved = loader.read_raw_string(43)
 

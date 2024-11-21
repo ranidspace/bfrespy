@@ -70,7 +70,7 @@ class VertexBufferParser:
         with (loader.temporary_seek(BufferInfo.buff_offs + buff_offs, io.SEEK_SET)):
             for buff in range(num_buffer):
                 buffer = Buffer()
-                buffer.data = [[]]
+                buffer.data = [b'']
                 buffer.stride = stride_array[buff].stride
 
                 loader.align(8)

@@ -13,9 +13,9 @@ class StringTable(IResData):
             signature = loader.read_uint32()
             block_offs = loader.read_uint32()
             block_size = loader.read_uint64()
-            string_count = loader.read_uint32()
+            num_strs = loader.read_uint32()
 
-            for i in range(string_count):
+            for i in range(num_strs):
                 size = loader.read_uint16()
                 self.strings.append(loader.read_null_string())
                 loader.align(2)

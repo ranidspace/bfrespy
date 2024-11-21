@@ -59,17 +59,17 @@ class ShapeParser:
                     max_ = max([x[3] for x in shape.bounding_radius_list])
                     shape.radius_array.append(max_)
                 else:
-                    shape.radius_array = loader.read_singles(num_mesh)
+                    shape.radius_array = list(loader.read_singles(num_mesh))
 
         shape.meshes = ([]
                         if num_mesh == 0
                         else loader.load_list(Mesh, num_mesh, mesh_array_offs)
                         )
         shape.skin_bone_idxs = (
-            []
+            ()
             if num_skin_bone_idx == 0
             else loader.load_custom(
-                list, loader.read_uint16s, num_skin_bone_idx,
+                tuple, loader.read_uint16s, num_skin_bone_idx,
                 offset=int(skin_bone_idx_list_offs)
             )
         )

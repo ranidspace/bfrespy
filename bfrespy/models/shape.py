@@ -18,11 +18,11 @@ class Shape(IResData):
         self.bone_idx = 0
         self.vtx_buff_idx = 0
         self.radius_array = []
-        self.bounding_radius_list: list[tuple[float]] = []
+        self.bounding_radius_list: list[tuple[float, float, float, float]] = []
         self.vtx_skin_count = 0
         self.target_attrib_count = 0
         self.meshes: list[Mesh] = []
-        self.skin_bone_idxs = []
+        self.skin_bone_idxs = tuple()
         self.key_shapes: ResDict[KeyShape] = ResDict()
         self.submesh_boundings: list[Bounding] = []
         self.submesh_bounding_nodes: list[BoundingNode] = []
@@ -115,13 +115,13 @@ class Mesh(IResData):
             self.submeshes = loader.load_list(
                 SubMesh, num_submesh, offset=submesh_array_offs
             )
-            data_offs = int(BufferInfo.buff_offs) + face_buff_offs
+            data_offs = BufferInfo.buff_offs + face_buff_offs
 
             self.index_buffer = Buffer()
             self.index_buffer.flags = buffer_size.flags
-            self.index_buffer.data = [[]]
+            self.index_buffer.data = [b'']
             self.index_buffer.data[0] = loader.load_custom(
-                list, loader.read_bytes, buffer_size.size, offset=data_offs
+                bytes, loader.read_bytes, buffer_size.size, offset=data_offs
             )
 
     class SwitchIndexFormat(IntEnum):
@@ -172,8 +172,8 @@ class SubMesh(IResData):
 
 class KeyShape(IResData):
     def __init__(self):
-        self.target_attrib_idx: list
-        self.target_attrib_idx_offs: list
+        self.target_attrib_idx: bytes
+        self.target_attrib_idx_offs: bytes
 
     def load(self, loader: ResFileLoader):
         self.target_attrib_idx = loader.read_bytes(20)

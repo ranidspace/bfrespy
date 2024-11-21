@@ -53,6 +53,6 @@ class Model(IResData):
 
             if (loader.res_file.version >= 0x03030000):
                 user_pointer = loader.read_uint32()
-            self.vtx_buffers = loader.load_custom(
+            self.vtx_buffers = loader.load_list(
                 VertexBuffer, num_vtx_buffer, ofs_vtx_buffer_list,
             )

@@ -4,7 +4,7 @@ from ..core import IResData, ResFileLoader
 class ResString(IResData):
     """Represents a String which is stored in a ResFile"""
 
-    def __init__(self, value=None, encoding=None):
+    def __init__(self, value=None, encoding: str = ''):
         if (value):
             if isinstance(value, str):
                 self.encoding = encoding
@@ -14,10 +14,13 @@ class ResString(IResData):
                 self.encoding = value.encoding
         else:
             self.string: str
-            self.encoding: str
+            self.encoding = None
 
-    def to_string(self):
+    def __str__(self):
         return self.string
+
+    def __repr__(self) -> str:
+        return f'ResString(\'{self.string}\')'
 
     def load(self, loader: ResFileLoader):
         if (loader.is_switch):
@@ -25,6 +28,6 @@ class ResString(IResData):
         else:
             self.string = loader.read_string(self.encoding)
 
-    def save(saver):
+    def save(self, saver):
         # TODO
         pass

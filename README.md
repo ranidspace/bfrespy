@@ -2,9 +2,17 @@
 
 A port of BfresLibrary to python, intended to be used in a blender importer addon.
 
-## Status
+## Todo:
+Importing
+- [x] Switch BFRES Files
+- [x] Models
+- [x] Materials
+- [x] Skeletons
+- [x] Embedded files
+- [ ] Textures
+- [ ] Animations
 
-Reads model data
+Wii U files and Exporting have not been implemented yet
 
 ## Credits
 

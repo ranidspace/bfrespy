@@ -16,8 +16,8 @@ class VertexBuffer(IResData):
         self.flags: int
 
         self.vtx_skin_count = 0
-        self.attributes: ResDict[Buffer] = ResDict()
-        self.buffers: ResDict[Buffer] = ResDict()
+        self.attributes: ResDict = ResDict()
+        self.buffers: list[Buffer] = []
 
     def load(self, loader: ResFileLoader):
         loader.check_signature(self._signature)
@@ -35,7 +35,7 @@ class VertexAttrib(IResData):
         self.name = ""
         self.buffer_idx = 0
         self.offset = 0
-        self.format_ = GX2AttribFormat.Format_32_32_32_32_Single
+        self.format_ = GX2AttribFormat.Format_32_32_32_Single
 
     def load(self, loader: ResFileLoader):
         if (loader.is_switch):

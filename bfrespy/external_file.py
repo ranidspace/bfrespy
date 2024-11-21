@@ -8,9 +8,7 @@ class ExternalFile(core.IResData):
         self.loaded_file_data: object
 
     def get_stream(self, writeable=False):
-        if writeable:
-            return io.BufferedRWPair(io.BytesIO(self.data))
-        return io.BufferedReader(io.BytesIO(self.data))
+        return io.BytesIO(self.data)
 
     def load(self, loader: core.ResFileLoader):
         offs_data = loader.read_offset()

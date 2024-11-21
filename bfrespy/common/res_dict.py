@@ -1,25 +1,67 @@
 from ..core import ResFileLoader, IResData
 from .res_string import ResString
-from abc import abstractmethod
+from typing import TypeVar, Generic, overload
+from collections.abc import Iterator, Collection
 
-# TODO a lot of modules needed for saving
+T = TypeVar('T', bound=IResData)
 
 
-class ResDict(IResData):
+class Node(Generic[T]):
+    size_in_bytes = 16
+
+    def __init__(self, key=None, value=None):
+        self.reference = 0xFFFFFFFF
+        self.idx_left: int
+        self.idx_right: int
+        self.key: str
+        self.value: T
+        if key and value:
+            self.key = key
+            self.value = value
+
+    def __repr__(self) -> str:
+        return f"ResDictNode('{self.key}': '{self.value}')"
+
+
+class ResDict(IResData, Collection[Node[T]]):
     """Represents the non-generic base of a dictionary which can quickly
     look up IResData instances via key or index.
     """
 
     def __init__(self):
-        self._nodes = []
+        self._nodes: list[Node[T]] = [Node()]
 
     def __len__(self):
         return len(self._nodes) - 1
 
+    def __iter__(self):
+        for node in self.nodes():
+            yield (node.key, node.value)
+
+    def __repr__(self):
+        return (
+            'ResDict{'
+            + ', '.join([f'{node.key}: {node.value}' for node in self.nodes()])
+            + '}'
+        )
+
+    def __contains__(self, x: object) -> bool:
+        node, index = self.__lookup(x, False)
+        if node:
+            return True
+        else:
+            return False
+
     # Operators
 
+    @overload
+    def __getitem__(self, key: int | str) -> T: ...
+
+    @overload
+    def __getitem__(self, key: IResData) -> str: ...
+
     def __getitem__(self, key):
-        if isinstance(key, int) or isinstance(key, str):
+        if isinstance(key, int | str):
             node, index = self.__lookup(key)
             return node.value
 
@@ -27,9 +69,9 @@ class ResDict(IResData):
             node, index = self.__lookup(key)
             return node.key
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value: T):
         if isinstance(key, int):
-            node = self.__lookup(key)
+            node, index = self.__lookup(key)
             node.value = value
 
         if isinstance(key, str):
@@ -37,7 +79,7 @@ class ResDict(IResData):
             if node:
                 node.value = value
             else:
-                self._nodes.append(self.Node(key, value))
+                self._nodes.append(Node(key, value))
 
         if isinstance(key, IResData):
             self.__lookup(key)
@@ -47,29 +89,33 @@ class ResDict(IResData):
 
     # Properties
 
-    def keys(self):
+    def keys(self) -> Iterator[str]:
         """Gets all keys under which instances are stored."""
         for node in self._nodes[1:]:
             yield node.key
 
-    def values(self):
+    def values(self) -> Iterator[T]:
         """Gets all stored instances."""
         for node in self._nodes[1:]:
             yield node.value
 
-    def nodes(self):
+    def nodes(self) -> Iterator[Node[T]]:
         """Returns only the publically visible nodes,
         excluding the root node.
         """
         for node in self._nodes[1:]:
             yield node
 
+    def items(self):
+        for node in self._nodes[1:]:
+            yield (node.key, node.value)
+
     # Public Methods
 
     def clear(self):
         """Removes all elements from the dictionary"""
         self._nodes.clear()
-        self._nodes.append(self.Node())
+        self._nodes.append(Node())
 
     def contains_key(self, key):
         """Determines whether an instance is saved
@@ -84,7 +130,7 @@ class ResDict(IResData):
             return node.key
         return ""
 
-    def index_of(self, key: str):
+    def index_of_key(self, key: str):
         """Searches for the specified key and returns the zero-based
         index of the first occurrence within the entire dictionary.
         """
@@ -132,17 +178,9 @@ class ResDict(IResData):
         node, index = self.__lookup(key, False)
         if node:
             raise ValueError(f'Key "{key}" already exists.')
-        self._nodes.append(self.Node(key, value))
+        self._nodes.append(Node(key, value))
 
-    def contains_value(self, value: IResData):
-        """Determines whether the given value is in the dictionary."""
-        node, index = self.__lookup(value, False)
-        if node:
-            return True
-        else:
-            return False
-
-    def index_of(self, value: IResData):
+    def index_of_value(self, value: IResData):
         """Searches for the specified value and returns the zero-based
         index of the first occurrence within the entire dictionary."""
         node, index = self.__lookup(value, False)
@@ -161,13 +199,12 @@ class ResDict(IResData):
         else:
             return False
 
-    def to_array(self) -> list[list[str, IResData]]:
-        """Copies the elements of the dictionary as [key, value] instances to
-        a new array and returns it.
+    def to_dict(self) -> dict[str, T]:
+        """Copies the elements of the dictionary to a python dict
         """
-        res_data = [None] * len(self)
+        res_data = {}
         for i, node in enumerate(self.nodes()):
-            res_data = [node.key, node.value]
+            res_data[node.key] = node.value
         return res_data
 
     def try_get_key(self, value):
@@ -182,7 +219,7 @@ class ResDict(IResData):
 
     # Methods
 
-    def load(self, T, loader: ResFileLoader):
+    def load(self, T: type[IResData], loader: ResFileLoader):
         loader.read_uint32()  # Always 0 on switch, total size on Wii U
         num_nodes = loader.read_uint32()  # Excluding Root node
 
@@ -203,55 +240,45 @@ class ResDict(IResData):
 
     # Private Methods
 
-    def __read_node(self, T, loader: ResFileLoader):
-        node = self.Node()
+    def __read_node(self, T, loader: ResFileLoader) -> Node:
+        node = Node()
 
         node.reference = loader.read_uint32()
         node.idx_left = loader.read_uint16()
         node.idx_right = loader.read_uint16()
         node.key = loader.load_string()
         if (not loader.is_switch):
-            node.value = loader._load_node_value(T, loader)
+            node.value = self._load_node_value(T, loader)
         return node
 
-    def __lookup(self, key, throwonfail=True):
+    def __lookup(self, key, throwonfail=True) -> tuple[Node, int]:
         if isinstance(key, int):
             if (key < 0 or key > len(self._nodes)):
                 if (throwonfail):
                     raise IndexError(f"{key} out of bounds in {self}.")
-                return None
-            node = self._nodes[key+1]
-            return node, key
+                return (None, -1)  # type: ignore
+            node = self._nodes[key + 1]
+            return (node, key)
 
-        if isinstance(key, str):
+        elif isinstance(key, str):
             for i, found_node in enumerate(self.nodes()):
                 if (found_node.key == key):
-                    return found_node, i
+                    return (found_node, i)
             if (throwonfail):
                 raise ValueError("{key} not found in {this}.")
+            return (None, -1)  # type: ignore
 
-        if isinstance(key, ResString):
+        # The next two lookup by value, not key.
+        elif isinstance(key, ResString):
             for i, found_node in enumerate(self.nodes()):
                 if (isinstance(found_node.value, ResString)):
                     if (str(found_node.value) == str(key)):
-                        return found_node, i
+                        return (found_node, i)
 
-        for i, found_node in enumerate(self.nodes()):
-            if (found_node.value == key):
-                return found_node, i
-        if (throwonfail):
-            raise ValueError("{key} not found in {this}.")
-        return None, -1
-
-    class Node:
-        size_in_bytes = 16
-
-        def __init__(self, key=None, value=None):
-            self.reference = 0xFFFFFFFF
-            self.idx_left: int
-            self.idx_right: int
-            self.key: str
-            self.value: IResData
-            if key and value:
-                self.key = key
-                self.value = value
+        else:
+            for i, found_node in enumerate(self.nodes()):
+                if (found_node.value == key):
+                    return (found_node, i)
+            if (throwonfail):
+                raise ValueError("{key} not found in {this}.")
+            return (None, -1)  # type: ignore

@@ -1,5 +1,6 @@
 import math
 from enum import IntEnum, auto
+from typing import Any
 
 from .. import core, gx2
 from ..common import (ResDict, ResString, TextureRef, UserData,
@@ -31,13 +32,13 @@ class Material(core.IResData):
         self.render_state: RenderState
         self.renderinfo_size: int
 
-        self.texture_slot_array: list[int]
-        self.sampler_slot_array: list[int]
-        self.param_idxs: list[int]
+        self.texture_slot_array: tuple[int, ...]
+        self.sampler_slot_array: tuple[int, ...]
+        self.param_idxs: tuple[int, ...]
 
     @property
     def visible(self):
-        return MaterialFlags in self.flags
+        return MaterialFlags.Visible == self.flags
 
     @visible.setter
     def visible(self, value):
@@ -156,8 +157,8 @@ class MaterialFlags(IntEnum):
 
 class ShaderAssign(core.IResData):
     def __init__(self):
-        self.shader_archive_name = ""
-        self.shading_model_name = ""
+        self.shader_archive_name: str = ''
+        self.shading_model_name: str = ''
         self.revision = 0
         self.attrib_assigns: ResDict[ResString] = ResDict()
         self.sampler_assigns: ResDict[ResString] = ResDict()
@@ -203,12 +204,20 @@ class ShaderAssign(core.IResData):
             self.shader_options = loader.load_dict(ResString)
 
 
+class RenderInfoType(IntEnum):
+    """Represents the data type of elements of the RenderInfo value array."""
+    # byte
+    Int32 = 0
+    Single = 1
+    String = 2
+
+
 class RenderInfo(core.IResData):
     """Represents a render info in a FMAT section storing uniform parameters
     required to render the UserData"""
 
     def __init__(self):
-        self.__value: object
+        self.__value: tuple[Any, ...]
         self.type: RenderInfoType
 
         self.name = ""
@@ -222,16 +231,22 @@ class RenderInfo(core.IResData):
     def data(self, value):
         self.__value = value
 
-    def get_value(self, value) -> list[object]:
+    def get_value_int32s(self) -> tuple[int, ...]:
         """Gets the stored value as an array."""
         if (self.__value == None):
-            return []
-        return list(self.__value)
+            return tuple()
+        return tuple(self.__value)
 
-    def get_value_strings(self, value) -> list[str]:
+    def get_value(self) -> tuple[object, ...]:
+        """Gets the stored value as an array."""
+        if (self.__value == None):
+            return tuple()
+        return tuple(self.__value)
+
+    def get_value_strings(self) -> tuple[str, ...]:
         if (self.__value == None or self.type != RenderInfoType.String):
-            return []
-        return list(self.__value)
+            return tuple('')
+        return tuple(self.__value)
 
     def set_value(self, value):
         if len(value) == 0 or isinstance(value[0], int):
@@ -252,19 +267,19 @@ class RenderInfo(core.IResData):
 
             match (self.type):
                 case RenderInfoType.Int32:
-                    self._value = loader.load_custom(
-                        list, loader.read_int32s, count, data_offs
+                    self.__value = loader.load_custom(
+                        tuple, loader.read_int32s, count, offset=data_offs
                     )
                 case RenderInfoType.Single:
-                    self._value = loader.load_custom(
-                        list, loader.read_singles, count, data_offs
+                    self.__value = loader.load_custom(
+                        tuple, loader.read_singles, count, offset=data_offs
                     )
                 case RenderInfoType.String:
                     if (data_offs == 0):  # Some games have empty data offset and no strings
-                        self._value = []
+                        self.__value = tuple('')
                     else:
-                        self._value = loader.load_custom(
-                            list, loader.load_strings, count, data_offs
+                        self.__value = loader.load_custom(
+                            tuple, loader.load_strings, count, offset=data_offs
                         )
         else:
             count = loader.read_uint16()
@@ -273,13 +288,13 @@ class RenderInfo(core.IResData):
             self.name = loader.load_string()
             match (self.type):
                 case RenderInfoType.Int32:
-                    self._value = loader.read_int32s(count)
+                    self.__value = loader.read_int32s(count)
                 case RenderInfoType.Single:
-                    self._value = loader.read_singles(count)
+                    self.__value = loader.read_singles(count)
                 case RenderInfoType.String:
-                    self._value = loader.load_strings(count)
+                    self.__value = loader.load_strings(count)
 
-    def read_data(self, loader: core.ResFileLoader, typ: IntEnum, count):
+    def read_data(self, loader: core.ResFileLoader, typ: RenderInfoType, count):
         self.type = typ
         match (self.type):
             case RenderInfoType.Int32:
@@ -288,14 +303,6 @@ class RenderInfo(core.IResData):
                 self.__value = loader.read_singles(count)
             case RenderInfoType.String:
                 self.__value = loader.load_strings(count)
-
-
-class RenderInfoType(IntEnum):
-    """Represents the data type of elements of the RenderInfo value array."""
-    # byte
-    Int32 = 0
-    Single = 1
-    String = 2
 
 
 class RenderState(core.IResData):
@@ -371,7 +378,7 @@ class ShaderParam(core.IResData):
             self.type = ShaderParamType(loader.read_byte())
             siz_data = loader.read_byte()
             self.data_offs = loader.read_uint16()
-            self.offset = loader.read_uint16()  # Uniform variable offset
+            self.offset = loader.read_int32()  # Uniform variable offset
             self.depended_idx = loader.read_uint16()
             self.depend_idx = loader.read_uint16()
             padding2 = loader.read_uint32()  # Uniform variable offset.

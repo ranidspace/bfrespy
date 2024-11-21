@@ -4,12 +4,8 @@ from .. import ResFile
 
 
 class ResFileSwitchLoader(ResFileLoader):
-    def __init__(self,
-                 res_file: ResFile,
-                 stream: io.BufferedReader,
-                 leave_open=False,
-                 res_data: IResData = None
-                 ):
+    def __init__(self, res_file: ResFile, stream: io.BytesIO | io.BufferedReader,
+                 leave_open=False, res_data: IResData = None):
         super().__init__(res_file, stream, leave_open, res_data)
         self.endianness = '<'
         self.is_switch = True
@@ -35,17 +31,17 @@ class ResFileSwitchLoader(ResFileLoader):
     def load_string(self, encoding=None) -> str:
         offset = self.read_offset()
         if (offset == 0):
-            return None
+            return ''
         # TODO Implement String Cache
         if (offset < 0):
-            return ""
+            return ''
         with self.temporary_seek(offset, io.SEEK_SET) as reader:
             try:
                 return self.read_string(encoding)
             except IndexError:
-                return ""
+                return ''
 
-    def load_strings(self, count, encoding=None):
+    def load_strings(self, count, encoding=None) -> tuple[str, ...]:
         offsets = self.read_uint64s(count)
         names = []
         with self.temporary_seek():
@@ -56,7 +52,7 @@ class ResFileSwitchLoader(ResFileLoader):
                 else:
                     self.seek(offset, io.SEEK_SET)
                     names.append(self.read_string(encoding))
-        return names
+        return tuple(names)
 
     def read_string(self, encoding=None):
         size = self.read_uint16()

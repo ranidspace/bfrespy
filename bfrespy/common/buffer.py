@@ -1,20 +1,17 @@
-from ..core import IResData, ResFileLoader
 import io
+from ..core import IResData, ResFileLoader
 
 
 class Buffer(IResData):
     def __init__(self):
         self.stride: int
-        self.data: list[list[int]]
+        self.data: list[bytes]
         self.flags: int
         self.buff_offs: int
 
     @property
     def size(self):
-        x = 0
-        for i in self.data:
-            x += len(i)
-        return x
+        return sum([len(x) for x in self.data])
 
     def load(self, loader: ResFileLoader):
         data_pointer = loader.read_uint32()

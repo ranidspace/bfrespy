@@ -24,9 +24,9 @@ class BufferSize(IResData):
 
 
 class BufferInfo(IResData):
-    buff_offs = None
-    vtx_buffer_data: list[bytearray] = None
-    index_buffer_data: list[bytearray] = None
+    buff_offs: int
+    vtx_buffer_data: list[bytearray] = []
+    index_buffer_data: list[bytearray] = []
     unk = 34
 
     @classmethod

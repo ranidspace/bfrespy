@@ -200,7 +200,7 @@ class Skeleton(IResData):
         self._flags = 0
         self.num_smooth_mtxs: int
         self.num_rigid_mtxs: int
-        self.user_idxs: list
+        self.user_idxs: tuple
 
         self.mtx_to_bone_list = []
         self.inverse_model_mtxs = []
@@ -252,7 +252,8 @@ class Skeleton(IResData):
             if (loader.res_file.version_major2 >= 9):
                 self._flags = loader.read_uint32()
             else:
-                loader.load_header_block()
+                offset = loader.read_uint32()
+                size = loader.read_uint64()
 
             bone_dict_offs = loader.read_offset()
             bone_array_offs = loader.read_offset()
@@ -276,7 +277,7 @@ class Skeleton(IResData):
             loader.seek(6)
 
             self.user_idxs = loader.load_custom(
-                list, loader.read_uint16s,
+                tuple, loader.read_uint16s,
                 num_bone,
                 offset=user_pointer
             )
