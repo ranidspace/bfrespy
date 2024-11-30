@@ -1,4 +1,4 @@
-from ..core import IResData, ResFileLoader
+from ..core import ResData, ResFileLoader
 from ..common import ResDict, UserData
 
 from .skeleton import Skeleton
@@ -7,8 +7,11 @@ from .shape import Shape
 from .material import Material
 
 
-class Model(IResData):
-    _signature = "FMDL"
+class Model(ResData):
+    """Represents an FMDL subfile in a ResFile, storing model vertex data, 
+    skeletons and used materials.
+    """
+    _SIGNATURE = "FMDL"
 
     def __init__(self):
         "Initializes a new instance of the Model class."
@@ -33,7 +36,7 @@ class Model(IResData):
         return count
 
     def load(self, loader: ResFileLoader):
-        loader.check_signature(self._signature)
+        loader._check_signature(self._SIGNATURE)
         if (loader.is_switch):
             from ..switch.model import ModelParser
             ModelParser.read(loader, self)

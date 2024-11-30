@@ -69,8 +69,8 @@ class ShapeParser:
             ()
             if num_skin_bone_idx == 0
             else loader.load_custom(
-                tuple, loader.read_uint16s, num_skin_bone_idx,
-                offset=int(skin_bone_idx_list_offs)
+                tuple, lambda: loader.read_uint16s(num_skin_bone_idx),
+                skin_bone_idx_list_offs
             )
         )
 
@@ -81,9 +81,7 @@ class ShapeParser:
             []
             if bounding_box_cnt == 0
             else loader.load_custom(
-                list,
-                loader.read_boundings,
-                bounding_box_cnt,
-                offset=int(bounding_box_array_offs)))
+                list, lambda: loader.read_boundings(bounding_box_cnt),
+                bounding_box_array_offs))
 
         shape.submesh_bounding_nodes = []

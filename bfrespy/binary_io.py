@@ -1,4 +1,5 @@
 """ Code referenced from Syroot/io_scene_bfres licensed unfer MIT"""
+from __future__ import annotations
 import io
 import struct
 import numpy
@@ -7,12 +8,15 @@ import numpy
 class BinaryReader:
     """A wrapper to read binary data as other formats"""
 
-    def __init__(self, stream: io.BytesIO | io.BufferedReader, leave_open=False):
+    def __init__(
+            self,
+            stream: io.BytesIO | io.BufferedReader,
+            leave_open=False):
         self.endianness: str
         self.leave_open = leave_open
         self.stream = stream
 
-        if (type(stream) == bytes):
+        if (type(stream) is bytes):
             stream = io.BytesIO(stream)
             return super().__init__(stream)
 
@@ -20,16 +24,16 @@ class BinaryReader:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if (self.leave_open == False):
+        if (self.leave_open is False):
             self.stream.close()
         else:
             print("nothing happened")
             return
 
     def temporary_seek(self, offset=None, origin=None):
-        if offset == None:
+        if (offset is None):
             offset = 0
-        if origin == None:
+        if (origin is None):
             origin = io.SEEK_CUR
         return NewSeek(self, offset, origin)
 
@@ -44,7 +48,7 @@ class BinaryReader:
 
     def read_null_string(self, encoding=None) -> str:
         # Mostly the same as ascii i dont think there's harm in setting this?
-        encoding = encoding if encoding != None else 'utf-8'
+        encoding = encoding if encoding is not None else 'utf-8'
         text = bytearray()
         i = self.stream.read(1)
         while i[0] != 0:
@@ -138,7 +142,7 @@ class BinaryReader:
                              self.stream.read(4 * count))
 
     def read_raw_string(self, length, encoding=None) -> str:
-        encoding = encoding if encoding != None else 'utf-8'
+        encoding = encoding if encoding is not None else 'utf-8'
         return self.stream.read(length).decode(encoding)
 
     def read_matrix_3x4(self) -> numpy.ndarray:
@@ -163,16 +167,24 @@ class BinaryReader:
                 self.read_single(), self.read_single())
 
     def read_bounding(self):
-        """Reads a Bounding instance from the current stream and returns it."""
-        from .models import Bounding
+        """Reads a Bounding instance from the current stream
+        and returns it.
+        """
+        from .models.shape import Bounding
         return Bounding(self.read_vector3f(), self.read_vector3f())
 
     def read_boundings(self, count):
-        """Reads Bounding instances from the current stream and returns them."""
+        """Reads Bounding instances from the current stream
+        and returns them.
+        """
         values = []
         for i in range(count):
             values.append(self.read_bounding())
         return values
+
+    def read_decimal10x5(self):
+        from .common import Decimal10x5
+        return Decimal10x5(self.read_uint16(), raw=True)
 
 
 class NewSeek:
@@ -187,7 +199,7 @@ class NewSeek:
         self.prev_pos = reader.tell()
 
     def __enter__(self):
-        if self.offset != None:
+        if (self.offset is not None):
             self.reader.seek(self.offset, self.whence)
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -286,7 +298,8 @@ class Offset:
 
     def satisfy(self, writer, value=None):
         self.value = value if value else writer.tell()
-        # Seek back temporarily to the offset position to write the final offset value.
+        # Seek back temporarily to the offset position to write the final
+        # offset value.
         current_position = writer.tell()
         writer.seek(self.position)
         writer.write_uint32(self.value)

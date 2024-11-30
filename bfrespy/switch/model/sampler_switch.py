@@ -1,21 +1,21 @@
 from enum import IntEnum
 from ... import core
-from ...models import TexSampler
+from ... import models
 from ... import gx2
 
 
-class SamplerSwitch(core.IResData):
+class SamplerSwitch(core.ResData):
     __FLAGS_SHRINK_MASK = 0b00000000_00110000
     __FLAGS_EXPAND_MASK = 0b00000000_00001100
     __FLAGS_MIPMAP_MASK = 0b00000000_00000011
 
     def __init__(self):
-        self.wrapmode_u = self.TexClamp.Repeat
-        self.wrapmode_v = self.TexClamp.Repeat
-        self.wrapmode_w = self.TexClamp.Clamp
-        self.compare_func = self.CompareFunction.Never
-        self.border_color_type = self.TexBorderType.White
-        self.anisotropic = self.MaxAnisotropic.Ratio_1_1
+        self.wrapmode_u = self.TexClamp.REPEAT
+        self.wrapmode_v = self.TexClamp.REPEAT
+        self.wrapmode_w = self.TexClamp.CLAMP
+        self.compare_func = self.CompareFunction.NEVER
+        self.border_color_type = self.TexBorderType.WHITE
+        self.anisotropic = self.MaxAnisotropic.RATIO_1_1
         self.lod_bias = 0.0
         self.min_lod = 0.0
         self.max_lod = 13.0
@@ -25,6 +25,9 @@ class SamplerSwitch(core.IResData):
 
     @property
     def shrink_xy(self):
+        """The texture filtering on the X and Y axes when the texture is drawn
+        smaller than the actual texture's resolution.
+        """
         return self.ShrinkFilterModes(self.__filter_flags
                                       & self.__FLAGS_SHRINK_MASK)
 
@@ -36,6 +39,9 @@ class SamplerSwitch(core.IResData):
 
     @property
     def expand_xy(self):
+        """The texture filtering on the X and Y axes when the texture is drawn
+        larger than the actual texture's resolution.
+        """
         return self.ExpandFilterModes(self.__filter_flags
                                       & self.__FLAGS_EXPAND_MASK)
 
@@ -47,6 +53,7 @@ class SamplerSwitch(core.IResData):
 
     @property
     def mipmap(self):
+        """The texture filtering for mipmaps."""
         return self.MipFilterModes(self.__filter_flags
                                    & self.__FLAGS_MIPMAP_MASK)
 
@@ -59,7 +66,7 @@ class SamplerSwitch(core.IResData):
     # Methods
 
     def to_tex_sampler(self):
-        sampler = TexSampler()
+        sampler = models.TexSampler()
         sampler.__filter_flags = self.__filter_flags
 
         if (self.wrapmode_u in self.clamp_modes):
@@ -103,106 +110,105 @@ class SamplerSwitch(core.IResData):
 
     class MaxAnisotropic(IntEnum):
         # byte
-        Ratio_1_1 = 0x1
-        Ratio_2_1 = 0x2
-        Ratio_4_1 = 0x4
-        Ratio_8_1 = 0x8
-        Ratio_16_1 = 0x10
+        RATIO_1_1 = 0x1
+        RATIO_2_1 = 0x2
+        RATIO_4_1 = 0x4
+        RATIO_8_1 = 0x8
+        RATIO_16_1 = 0x10
 
     class MipFilterModes(IntEnum):
         # uint16
-        None_ = 0
-        Points = 1
-        Linear = 2
+        NONE = 0
+        POINTS = 1
+        LINEAR = 2
 
     class ExpandFilterModes(IntEnum):
         # uint16
-        Points = 1 << 2
-        Linear = 2 << 2
+        POINTS = 1 << 2
+        LINEAR = 2 << 2
 
     class ShrinkFilterModes(IntEnum):
         # uint16
-        Points = 1 << 4
-        Linear = 2 << 4
+        POINTS = 1 << 4
+        LINEAR = 2 << 4
 
     class CompareFunction(IntEnum):
         """Represents compare functions used for depth and stencil tests."""
         # byte
-        Never = 0
-        Less = 1
-        Equal = 2
-        LessOrEqual = 3
-        Greater = 4
-        NotEqual = 5
-        GreaterOrEqual = 6
-        Always = 7
+        NEVER = 0
+        LESS = 1
+        EQUAL = 2
+        LESS_OR_EQUAL = 3
+        GREATER = 4
+        NOT_EQUAL = 5
+        GREATER_OR_EQUAL = 6
+        ALWAYS = 7
 
     class TexBorderType(IntEnum):
-
         """Represents type of border color to use."""
         # byte
-        White = 0
-        Transparent = 1
-        Opaque = 2
+        WHITE = 0
+        TRANSPARENT = 1
+        OPAQUE = 2
 
     class TexClamp(IntEnum):
         """Represents how to treat texture coordinates outside of the
         normalized coordinate texture range.
         """
         # sbyte
-        Repeat = 0
-        Mirror = 1
-        Clamp = 2
-        ClampToEdge = 3
-        MirrorOnce = 4
-        MirrorOnceClampToEdge = 5
+        REPEAT = 0
+        MIRROR = 1
+        CLAMP = 2
+        CLAMP_TO_EDGE = 3
+        MIRROR_ONCE = 4
+        MIRROR_ONCE_CLAMP_TO_EDGE = 5
 
     expand_filters = {
-        ExpandFilterModes.Linear: gx2.GX2TexXYFilterType.Bilinear,
-        ExpandFilterModes.Points: gx2.GX2TexXYFilterType.Point,
+        ExpandFilterModes.LINEAR: gx2.GX2TexXYFilterType.BILINEAR,
+        ExpandFilterModes.POINTS: gx2.GX2TexXYFilterType.POINT,
     }
 
     shrink_filters = {
-        ShrinkFilterModes.Linear: gx2.GX2TexXYFilterType.Bilinear,
-        ShrinkFilterModes.Points: gx2.GX2TexXYFilterType.Point,
+        ShrinkFilterModes.LINEAR: gx2.GX2TexXYFilterType.BILINEAR,
+        ShrinkFilterModes.POINTS: gx2.GX2TexXYFilterType.POINT,
     }
 
     mip_filters = {
-        MipFilterModes.Linear: gx2.GX2TexMipFilterType.Linear,
-        MipFilterModes.Points: gx2.GX2TexMipFilterType.Point,
-        MipFilterModes.None_: gx2.GX2TexMipFilterType.NoMip,
+        MipFilterModes.LINEAR: gx2.GX2TexMipFilterType.LINEAR,
+        MipFilterModes.POINTS: gx2.GX2TexMipFilterType.POINT,
+        MipFilterModes.NONE: gx2.GX2TexMipFilterType.NO_MIP,
     }
 
     border_modes = {
-        TexBorderType.Opaque: gx2.GX2TexBorderType.SolidBlack,
-        TexBorderType.White: gx2.GX2TexBorderType.SolidWhite,
-        TexBorderType.Transparent: gx2.GX2TexBorderType.ClearBlack,
+        TexBorderType.OPAQUE: gx2.GX2TexBorderType.SOLID_BLACK,
+        TexBorderType.WHITE: gx2.GX2TexBorderType.SOLID_WHITE,
+        TexBorderType.TRANSPARENT: gx2.GX2TexBorderType.CLEAR_BLACK,
     }
 
     compare_modes = {
-        CompareFunction.Always: gx2.GX2CompareFunction.Always,
-        CompareFunction.Equal: gx2.GX2CompareFunction.Equal,
-        CompareFunction.Greater: gx2.GX2CompareFunction.Greater,
-        CompareFunction.GreaterOrEqual: gx2.GX2CompareFunction.GreaterOrEqual,
-        CompareFunction.Less: gx2.GX2CompareFunction.Less,
-        CompareFunction.LessOrEqual: gx2.GX2CompareFunction.LessOrEqual,
-        CompareFunction.Never: gx2.GX2CompareFunction.Never,
-        CompareFunction.NotEqual: gx2.GX2CompareFunction.NotEqual,
+        CompareFunction.ALWAYS: gx2.GX2CompareFunction.ALWAYS,
+        CompareFunction.EQUAL: gx2.GX2CompareFunction.EQUAL,
+        CompareFunction.GREATER: gx2.GX2CompareFunction.GREATER,
+        CompareFunction.GREATER_OR_EQUAL: gx2.GX2CompareFunction.GREATER_OR_EQUAL,
+        CompareFunction.LESS: gx2.GX2CompareFunction.LESS,
+        CompareFunction.LESS_OR_EQUAL: gx2.GX2CompareFunction.LESS_OR_EQUAL,
+        CompareFunction.NEVER: gx2.GX2CompareFunction.NEVER,
+        CompareFunction.NOT_EQUAL: gx2.GX2CompareFunction.NOT_EQUAL,
     }
 
     clamp_modes = {
-        TexClamp.Repeat: gx2.GX2TexClamp.Wrap,
-        TexClamp.Mirror: gx2.GX2TexClamp.Mirror,
-        TexClamp.MirrorOnce: gx2.GX2TexClamp.MirrorOnce,
-        TexClamp.MirrorOnceClampToEdge: gx2.GX2TexClamp.MirrorOnceBorder,
-        TexClamp.Clamp: gx2.GX2TexClamp.Clamp,
-        TexClamp.ClampToEdge: gx2.GX2TexClamp.ClampBorder,
+        TexClamp.REPEAT: gx2.GX2TexClamp.WRAP,
+        TexClamp.MIRROR: gx2.GX2TexClamp.MIRROR,
+        TexClamp.MIRROR_ONCE: gx2.GX2TexClamp.MIRROR_ONCE,
+        TexClamp.MIRROR_ONCE_CLAMP_TO_EDGE: gx2.GX2TexClamp.MIRROR_ONCE_BORDER,
+        TexClamp.CLAMP: gx2.GX2TexClamp.CLAMP,
+        TexClamp.CLAMP_TO_EDGE: gx2.GX2TexClamp.CLAMP_BORDER,
     }
 
     anisotropic_modes = {
-        MaxAnisotropic.Ratio_1_1: gx2.GX2TexAnisoRatio.Ratio_1_1,
-        MaxAnisotropic.Ratio_2_1: gx2.GX2TexAnisoRatio.Ratio_2_1,
-        MaxAnisotropic.Ratio_4_1: gx2.GX2TexAnisoRatio.Ratio_4_1,
-        MaxAnisotropic.Ratio_8_1: gx2.GX2TexAnisoRatio.Ratio_8_1,
-        MaxAnisotropic.Ratio_16_1: gx2.GX2TexAnisoRatio.Ratio_16_1,
+        MaxAnisotropic.RATIO_1_1: gx2.GX2TexAnisoRatio.RATIO_1_1,
+        MaxAnisotropic.RATIO_2_1: gx2.GX2TexAnisoRatio.RATIO_2_1,
+        MaxAnisotropic.RATIO_4_1: gx2.GX2TexAnisoRatio.RATIO_4_1,
+        MaxAnisotropic.RATIO_8_1: gx2.GX2TexAnisoRatio.RATIO_8_1,
+        MaxAnisotropic.RATIO_16_1: gx2.GX2TexAnisoRatio.RATIO_16_1,
     }

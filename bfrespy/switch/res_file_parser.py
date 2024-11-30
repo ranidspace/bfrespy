@@ -1,21 +1,21 @@
+from __future__ import annotations
 import io
-from ..res_file import ResFile
-from ..external_file import ExternalFile
 from .switchcore import ResFileSwitchLoader
 from .memory_pool import MemoryPool, BufferInfo
-from ..common import ResString, StringTable, ResDict
-from .. import models
+from .. import common, models, skeletal_anim
+from .. import res_file as res
+from .. import external_file as ext
 
 
 class ResFileParser:
     @staticmethod
-    def load(loader: 'ResFileSwitchLoader', res_file: 'ResFile'):
+    def load(loader: ResFileSwitchLoader, res_file: res.ResFile):
         # File Header
-        loader.check_signature("FRES")
+        loader._check_signature("FRES")
         padding = loader.read_uint32()
         res_file.version = loader.read_uint32()
         res_file.set_version_info(res_file.version)
-        res_file.endianness = loader.read_byte_order()
+        res_file.endianness = loader._read_byte_order()
         res_file.alignment = loader.read_byte()
         # Thanks MasterF0X for pointing out the layout of the these
         res_file.target_addr_size = loader.read_byte()
@@ -33,10 +33,10 @@ class ResFileParser:
         model_dict_offs = loader.read_offset()
         if (loader.res_file.version_major2 >= 9):
             loader.read_bytes(32)  # reserved
-            
+
+        res_file.skeletal_anims = loader.load_dict_values(
+            skeletal_anim.SkeletonAnim)
         # TODO Read These properly
-        res_file.skeletal_anims = loader.read_offset()
-        res_file.skeletal_anims = loader.read_offset()
         res_file.material_anims = loader.read_offset()
         res_file.material_anims = loader.read_offset()
         res_file.bone_visibility_anims = loader.read_offset()
@@ -56,20 +56,21 @@ class ResFileParser:
                     return loader.read_byte()
 
             flags = peek_flags()
-            if (res_file.has_flag(flags,
-                                  res_file.ExternalFlags.holds_external_strings)):
+            if (res_file.has_flag(
+                    flags, res_file.ExternalFlags.HOLDS_EXTERNAL_STRINGS)):
                 externalFileOffset = loader.read_offset()
-                externalFileDict = loader.load_dict(ResString)
+                externalFileDict = loader.load_dict(common.ResString)
 
-                '''with (loader.temporary_seek(externalFileOffset, io.SEEK_SET)):
-                    StringCache.Strings.Clear()
-                    foreach (var str in externalFileDict.Keys)
-                        long stringID = loader.ReadInt64()
-                        StringCache.Strings.Add(stringID, str)'''
+                with (loader.temporary_seek(externalFileOffset, io.SEEK_SET)):
+                    common.stringcache.clear()
+                    for string in externalFileDict.keys():
+                        string_id = loader.read_int64()
+                        common.stringcache[string_id] = string
                 return
-             # GPU section for TOTK
+
+            # GPU section for TOTK
             if (res_file.has_flag(flags,
-                                  res_file.ExternalFlags.has_external_gpu)):
+                                  res_file.ExternalFlags.HAS_EXTERNAL_GPU)):
                 with (loader.temporary_seek(siz_file, io.SEEK_SET)):
                     gpuDataOffset = loader.read_uint32()
                     gpuBufferSize = loader.read_uint32()
@@ -77,9 +78,9 @@ class ResFileParser:
                     res_file.buffer_info = BufferInfo()
                     res_file.buffer_info.buff_offs = siz_file + 288
 
-        res_file.external_files = loader.load_dict_values(ExternalFile)
+        res_file.external_files = loader.load_dict_values(ext.ExternalFile)
         padding1 = loader.read_uint64()
-        res_file.string_table = loader.load(StringTable)
+        res_file.string_table = loader.load(common.StringTable)
         string_pool_size = loader.read_uint32()
         num_model = loader.read_uint16()
 
@@ -103,7 +104,8 @@ class ResFileParser:
         num_shape_anim = loader.read_uint16()
         num_scene_anim = loader.read_uint16()
         num_external_file = loader.read_uint16()
-        res_file.external_flag = ResFile.ExternalFlags(loader.read_byte())
+        res_file.external_flag = res.ResFile.ExternalFlags(
+            loader.read_byte())
         reserve10 = loader.read_byte()
 
         padding3 = loader.read_uint32()
@@ -123,7 +125,7 @@ class ResFileParser:
 
         res_file.tex_pattern_anims = ResDict(MaterialAnim)
         res_file.mat_visibility_anims = ResDict(MaterialAnim)
-        res_file.shader_param_anims = ResDict(MaterialAnim)
+        res_file.shaderparam_anims = ResDict(MaterialAnim)
         res_file.color_anims = ResDict(MaterialAnim)
         res_file.tex_srt_anims = ResDict(MaterialAnim)
 
@@ -132,7 +134,7 @@ class ResFileParser:
             if (anim.name.contains("_ftp")):
                 res_file.tex_pattern_anims.append(anim.name, anim)
             elif (anim.name.contains("_fts")):
-                res_file.shader_param_anims.append(anim.name, anim)
+                res_file.shaderparam_anims.append(anim.name, anim)
             elif (anim.name.contains("_fcl")):
                 res_file.color_anims.append(anim.name, anim)
             elif (anim.name.contains("_fst")):
@@ -144,4 +146,4 @@ class ResFileParser:
             elif (anim.material_anim_data_list != None and anim.material_anim_data_list.any(x= > x.texture_pattern_count > 0)):
                 res_file.tex_pattern_anims.append(anim.name, anim)
             else:
-                res_file.shader_param_anims.append(anim.name, anim)"""
+                res_file.shaderparam_anims.append(anim.name, anim)"""

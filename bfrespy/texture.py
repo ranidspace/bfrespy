@@ -1,8 +1,11 @@
 from . import core
-from .common import UserData
 
 
-class TextureShared(core.IResData):
+class TextureShared(core.ResData):
+    """Represents an FMDL subfile in a ResFile storing multi-dimensional 
+    texture data.
+    """
+
     def __init__(self):
         self.name: str
         self.path: str
@@ -11,10 +14,13 @@ class TextureShared(core.IResData):
         self.depth: int
         self.mipcount: int
         self.array_length: int
-        self.userdata: UserData
+        self.userdata: 'UserData'
+
+    def __repr__(self):
+        return "TextureShared{" + str(self.name) + "}"
 
     def get_swizzled_data(self, arraylevel=None, miplevel=None):
         return None
 
-    def load(self, loader: core.IResData):
+    def load(self, loader: core.ResData):
         pass

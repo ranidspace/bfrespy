@@ -1,24 +1,31 @@
 import io
-from ...core import IResData
+from ...core import ResData
 from ..memory_pool import MemoryPool, BufferInfo
 from ..switchcore import ResFileSwitchLoader
-from ...models import *
+from ...models import VertexBuffer, VertexAttrib
 from ...common import UserData, Buffer
 
 
-class VertexBufferStride(IResData):
+class VertexBufferStride(ResData):
     def __init__(self):
         self.stride: int
+
+    def __repr__(self):
+        return "VertexBufferStride{" + str(self.stride) + "}"
 
     def load(self, loader: ResFileSwitchLoader):
         self.stride = loader.read_uint32()
         loader.seek(12)
 
 
-class VertexBufferSize(IResData):
+class VertexBufferSize(ResData):
+
     def __init__(self):
         self.size: int
         self.gpu_access_flags: int
+
+    def __repr__(self):
+        return "VertexBufferSize{" + str(self.size) + "}"
 
     def load(self, loader: ResFileSwitchLoader):
         self.size = loader.read_uint32()
@@ -51,13 +58,11 @@ class VertexBufferParser:
         vtx_buffer.vtx_skin_count = loader.read_uint16()
         vtx_buffer.gpu_buff_align = loader.read_uint16()
 
-        # Buffers use the index buffer offset from memory info section
-        #
+        # Buffers use the index buffer offset from memory info section.
         # This goes to a section in the memory pool which stores all the
-        # buffer data, including faces
-        #
+        # buffer data, including faces.
         # To obtain a list of all the buffer data, it would be by the
-        # index buffer offset + buff_offs
+        # index buffer offset + buff_offs.
 
         stride_array = loader.load_list(
             VertexBufferStride, num_buffer, vtx_stride_size_offs

@@ -1,16 +1,15 @@
-import io
-from .core import IResData, ResFileLoader
+from .core import ResData, ResFileLoader
 
 
-class RelocationTable(IResData):
-    _signature = "_RLT"
+class RelocationTable(ResData):
+    _SIGNATURE = "_RLT"
 
     def __init__(self):
         self.this_table_offs: int
         self.section_count: int
 
     def load(self, loader: ResFileLoader):
-        loader.check_signature(self._signature)
+        loader._check_signature(self._SIGNATURE)
         self.this_table_offs = loader.read_uint32()
         self.section_count = loader.read_uint32()
         self.reserved = loader.read_uint32()
@@ -35,19 +34,23 @@ class RelocationTable(IResData):
                                          else 0)
                         self.reloc_dict[region_offset_iter] = reloc_pointer
                         region_offset_iter += 8
-                    region_offs = region_offs + offset_count * 8 + entry.array_stride * 8
+                    region_offs = (region_offs
+                                   + offset_count * 8
+                                   + entry.array_stride * 8)
 
     @staticmethod
     def calc_table_size(sections, entries):
         return sections * 0x18 + entries * 0x8 + 0x10
 
     def get_base_entry_offs(self, idx):
-        return self.this_table_offs + 0x10 + 0x18 * self.section_count + idx * 0x8
+        return (self.this_table_offs + 0x10
+                + 0x18 * self.section_count
+                + idx * 0x8)
 
     def get_section(self, section_idx):
         return self.this_table_offs + 0x10 + section_idx * 0x18
 
-    class ResSection(IResData):
+    class ResSection(ResData):
         def __init__(self):
             self.base_pointer: int
             self.region_offs: int
@@ -63,7 +66,7 @@ class RelocationTable(IResData):
             self.base_entry_idx = loader.read_uint32()
             self.entry_count = loader.read_uint32()
 
-    class ResEntry(IResData):
+    class ResEntry(ResData):
         def __init__(self):
             self.region_offs: int
             self.array_count: int
