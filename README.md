@@ -9,8 +9,8 @@ Importing
 - [x] Materials
 - [x] Skeletons
 - [x] Embedded files
+- [x] Bone Animations
 - [ ] Textures
-- [ ] Animations
 
 Wii U files and Exporting have not been implemented yet
 

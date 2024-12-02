@@ -495,25 +495,24 @@ class UserData(core.ResData):
     def get_data(self):
         return self._value
 
-    @singledispatchmethod
-    def set_value(self, value):
-        raise NotImplementedError(
-            f"UserData recieved unsupported type {type(value).__name__}")
-
-    @set_value.register
-    def _(self, value: tuple[int]):
-        self.type = UserDataType.INT32
-        self._value = value
-
-    @set_value.register
-    def _(self, value: tuple[float]):
-        self.type = UserDataType.SINGLE
-        self._value = value
-
-    @set_value.register
-    def _(self, value: tuple[bool], as_unicode=False):
-        self.type = UserDataType.WString if as_unicode else UserDataType.STRING
-        self._value = value
+    def set_value(self, value, as_unicode=False):
+        if type(value) is bytes | bytearray:
+            self.type = UserDataType.BYTE
+            self._value = value
+        elif len(value) == 0 or type(value[0]) is int:
+            self.type = UserDataType.INT32
+            self._value = value
+        elif type(value[0]) is float:
+            self.type = UserDataType.SINGLE
+            self._value = value
+        elif type(value[0]) is str:
+            self.type = (UserDataType.WString
+                         if as_unicode
+                         else UserDataType.STRING)
+            self._value = value
+        else:
+            raise TypeError(
+                f"UserData recieved unsupported type {type(value).__name__}")
 
     # there would be a "Bytes" here but signed bytes and int32 just use "int"
 
