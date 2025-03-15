@@ -358,6 +358,16 @@ class Srt2D:
     rotation: float
     translation: tuple[float, float]
 
+    def __repr__(self):
+        return f"Srt2D[{self.scaling} {self.rotation} {self.translation}]"
+
+    def __bool__(self):
+        return (
+            self.scaling != (1.0, 1.0)
+            or self.rotation != 0.0
+            or self.translation != (0.0, 0.0)
+        )
+
 
 @dataclass
 class Srt3D:
@@ -366,6 +376,15 @@ class Srt3D:
     rotation: tuple[float, float, float]
     translation: tuple[float, float, float]
 
+    def __repr__(self):
+        return f"Srt3D[{self.scaling} {self.rotation} {self.translation}]"
+
+    def __bool__(self):
+        return (
+            self.scaling != (1.0, 1.0, 1.0)
+            or self.rotation != (0.0, 0.0, 0.0)
+            or self.translation != (0.0, 0.0, 0.0)
+        )
 
 @dataclass
 class TexSrt:
@@ -375,6 +394,15 @@ class TexSrt:
     rotation: float
     translation: tuple[float, float]
 
+    def __repr__(self):
+        return f"TexSrt[{self.mode.name} {self.scaling} {self.rotation} {self.translation}]"
+
+    def __bool__(self):
+        return (
+            self.scaling != (1.0, 1.0)
+            or self.rotation != 0.0
+            or self.translation != (0.0, 0.0)
+        )
 
 class TexSrtMode(IntEnum):
     MODE_MAYA = 0
@@ -872,3 +900,4 @@ class ResDict(core.ResData, Collection[Node[T]]):
         if (throwonfail):
             raise ValueError("{key} not found in {this}.")
         return (Node(), -1)
+

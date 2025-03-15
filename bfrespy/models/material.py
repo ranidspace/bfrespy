@@ -103,7 +103,7 @@ class Material(core.ResData):
             reader.endianness = endianness
             for param in self.shaderparams.values():
                 reader.seek(param.data_offs, io.SEEK_SET)
-                param.data_value = self.__read_param_data(param.type, reader)
+                param.data = self.__read_param_data(param.type, reader)
 
     def __read_param_data(self, type_, reader: BinaryReader):
         match (type_):
@@ -347,7 +347,7 @@ class ShaderParam(core.ResData):
     shader variables"""
 
     def __init__(self):
-        self.data_value: object
+        self.data: object
         self.callback_pointer: int
         self.use_padding: bool
         self.padding_length: int
